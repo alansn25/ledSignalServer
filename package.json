@@ -2,7 +2,7 @@
   "scripts": {
     "start": "node server.js"
   },
-  "name": "",
+  "name": "LedSignal",
   "version": "",
   "description": "\"# ledSignalServer\"",
   "dependencies": {
