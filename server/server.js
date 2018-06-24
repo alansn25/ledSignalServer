@@ -20,7 +20,12 @@ var io = socketIO(server);
 
 app.use(express.static(publicPath));
 
-
+mqttClient.on('connect', () => {
+  console.log(`Connected`);
+  mqttClient.subscribe(`${topicPrefix}/#`);
+  //console.log(`Subscribed to ${topicPrefix}/#`);
+ 
+});
 
 
 
@@ -30,11 +35,8 @@ io.on('connection', (socket)=>{
   socket.emit('subscribed',{
     topic: `${topicPrefix}/#`   
   });
-  mqttClient.on('connect', () => {
-    mqttClient.subscribe(`${topicPrefix}/#`);
-    console.log(`Subscribed to ${topicPrefix}/#`);
-   
-  });
+
+  
 
 
   socket.on('publishMQTTMessage', (message)=>{
@@ -69,6 +71,9 @@ function publishMQTTMessage (msg, id) {
   mqttClient.publish(`${topicPrefix}/${id}/command`, msg);   
 };
 
+server.listen(port, () =>{
+  console.log(`Server is up on port ${port}`);
+});
 
 
 
@@ -121,6 +126,3 @@ function publishMQTTMessage (msg, id) {
 
 
 
-server.listen(port, () =>{
-    console.log(`Server is up on port ${port}`);
-});
