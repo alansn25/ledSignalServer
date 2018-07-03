@@ -1,6 +1,7 @@
 const expect = require('expect');
+const fs = require('fs');
 const {Products} = require('./products');
-
+var fileName = 'products-data.json';// it has to get this from the file products.js instead of here, also better to create a file to test and another to run
 
 
 describe('Product',() =>{
@@ -8,22 +9,171 @@ describe('Product',() =>{
 
     beforeEach(() =>{
         products = new Products();
-        products.products =[{
-            mac:'123456789001'            
-          },{
-            mac:'123456789002',
-            id:'my id number'            
-          },{
-            mac:'123456789003'           
-          },{
-            mac:'123456789004'           
-          }]
+        products.products =[
+            {
+                mac:'123456789001',
+                firmware:{
+                    major:0,
+                    minor:1,
+                    rev:5,
+                    build:1806231907,
+                    bin:2
+                },
+                status:{
+                    mem:35808,
+                    rst_cause:6
+                },
+                network:{
+                    ssid:"JEAD",
+                    bssid:"B0487AC69B9C",
+                    ch:6,
+                    ip:"192.168.1.127",
+                    mask:"255.255.255.0",
+                    gw:"192.168.1.1"
+                }            
+            },
+            {
+                mac:'123456789002',
+                id:'my id number'            
+            },
+            {
+                mac:'123456789003',
+                id:'loja centro praça',
+                firmware:{
+                    major:0,
+                    minor:1,
+                    rev:5,
+                    build:1806231907,
+                    bin:2
+                },
+                status:{
+                    mem:35808,
+                    rst_cause:6
+                },
+                network:{
+                    ssid:"JEAD",
+                    bssid:"B0487AC69B9C",
+                    ch:6,
+                    ip:"192.168.1.127",
+                    mask:"255.255.255.0",
+                    gw:"192.168.1.1"
+                }                           
+            },
+            {
+                mac:'123456789004'           
+            }
+        ]
     });
+
+
+    describe('writeProductsToFile',() =>{
+        it('should write products with only mac or/and id to file', (done)=>{
+            var tempProducts = [
+                {
+                    mac: products.products[0].mac
+                },
+                {
+                    mac: products.products[1].mac,
+                    id: products.products[1].id
+                },
+                {
+                    mac: products.products[2].mac,
+                    id: products.products[2].id
+                },
+                {
+                    mac: products.products[3].mac,
+                }
+            ];
+            products.products = tempProducts;
+            products.writeProductsToFile(()=>{
+                fs.readFile(fileName, (err, data) => {
+                    if(!err){
+                        var readProducts = JSON.parse(data);
+                        expect(readProducts).toEqual(products.products); 
+                        done();             
+                    }                   
+                }); 
+            });                      
+        });
+
+        it('should write products to file without any properties other than mac and id', (done)=>{
+            var shouldBeProducts = [
+                {
+                    mac: products.products[0].mac
+                },
+                {
+                    mac: products.products[1].mac,
+                    id: products.products[1].id
+                },
+                {
+                    mac: products.products[2].mac,
+                    id: products.products[2].id
+                },
+                {
+                    mac: products.products[3].mac,
+                }
+            ];
+            products.writeProductsToFile(()=>{
+                fs.readFile(fileName, (err, data) => {
+                    if(!err){
+                        var readProducts = JSON.parse(data);
+                        expect(readProducts).toEqual(shouldBeProducts); 
+                        done();             
+                    }                   
+                });  
+            });                    
+        });
+        
+
+    });
+    describe('readProductsFromFile',() =>{
+        it('should read products from file', (done)=>{
+            var localProducts = new Products();
+            localProducts.products = products.products;
+            var shouldBeProducts = [
+                {
+                    mac: localProducts.products[0].mac
+                },
+                {
+                    mac: localProducts.products[1].mac,
+                    id: localProducts.products[1].id
+                },
+                {
+                    mac: localProducts.products[2].mac,
+                    id: localProducts.products[2].id
+                },
+                {
+                    mac: localProducts.products[3].mac,
+                }
+            ];
+
+            localProducts.writeProductsToFile(()=>{
+                localProducts.products = [];
+                localProducts.readProductsFromFile(()=>{
+                    expect(localProducts.products).toEqual(shouldBeProducts);
+                    done();
+                }); 
+            });            
+        });
+
+        it('should read products from file and merge with the products array', (done)=>{
+            var localProducts = new Products();
+            localProducts.products = products.products;
+            var currentProducts=localProducts.products;
+            localProducts.writeProductsToFile(()=>{
+                localProducts.readProductsFromFile((err)=>{                   
+                    expect(localProducts.products).toEqual(currentProducts);
+                    done();
+                }); 
+            });            
+        });
+    });
+
     describe('addProductByMac',() =>{
         it('should add new product by mac', ()=>{
             var products = new Products();
             var product = {
-                mac:'123456789004'                
+                mac:'EF3456789ABC'                
             };
             var resUser = products.addProductByMac(product.mac);
 
@@ -32,6 +182,24 @@ describe('Product',() =>{
 
         it('should not be able to add product with repeated mac', ()=>{
             var productMac = products.products[1].mac;
+            var resProduct = products.addProductByMac(productMac);
+            expect(resProduct).toBeFalsy(); 
+        });
+
+        it('should not be able to add product with mac with not hexadecimal number', ()=>{
+            var productMac = 'EF345N789ABC';
+            var resProduct = products.addProductByMac(productMac);
+            expect(resProduct).toBeFalsy(); 
+        });
+
+        it('should not be able to add product with mac with lenght higher than 12', ()=>{
+            var productMac = 'EF3456789ABC0';
+            var resProduct = products.addProductByMac(productMac);
+            expect(resProduct).toBeFalsy(); 
+        });
+
+        it('should not be able to add product with mac with lenght smaller than 12', ()=>{
+            var productMac = 'EF345789ABC';
             var resProduct = products.addProductByMac(productMac);
             expect(resProduct).toBeFalsy(); 
         });
@@ -100,6 +268,18 @@ describe('Product',() =>{
             expect(products.products[1].led).toEqual(productLed); 
             expect(resProduct.led).toEqual(productLed);        
         });
+
+        it('should not set product led with wrong value', ()=>{
+            var currentProduct = products.products[1];
+            var productMac = currentProduct.mac;
+            var productLed = {
+                yellow:'On',
+                green:'Off'                
+            };
+            var resProduct = products.setProductLed(productMac,productLed);
+            expect(products.products[1]).toEqual(currentProduct); 
+            expect(resProduct).toBeFalsy();        
+        });
     });
 
     describe('setProductFirmware',() =>{
@@ -145,6 +325,56 @@ describe('Product',() =>{
             var resProduct = products.setProductNetwork(productMac,productNetwork);
             expect(products.products[1].network).toEqual(productNetwork); 
             expect(resProduct.network).toEqual(productNetwork);        
+        });
+    });
+
+    describe('setProductActive',() =>{
+        it('should set product active on', ()=>{
+            var productMac = products.products[1].mac;
+            var productActive = 'on';
+            var resProduct = products.setProductActive(productMac,productActive);
+            expect(products.products[1].active).toEqual(productActive); 
+            expect(resProduct.active).toEqual(productActive);        
+        });
+
+        it('should set product active off', ()=>{
+            var productMac = products.products[1].mac;
+            var productActive = 'off';
+            var resProduct = products.setProductActive(productMac,productActive);
+            expect(products.products[1].active).toEqual(productActive); 
+            expect(resProduct.active).toEqual(productActive);        
+        });
+
+        it('should not be able to set product active with wrong value', ()=>{
+            var currentProduct = products.products[1];
+            var productMac = currentProduct.mac;
+            var productActive = 'On';
+            var resProduct = products.setProductActive(productMac,productActive);
+            expect(products.products[1]).toEqual(currentProduct); 
+            expect(resProduct).toBeFalsy();        
+        });
+    });
+
+    describe('isProductActive',() =>{
+        it('should get true if the product is active', ()=>{
+            var productMac = products.products[1].mac;           
+            var resProduct = products.setProductActive(productMac,'on');
+            var res = products.isProductActive(productMac);
+            expect(res).toEqual(true);             
+        });
+
+        it('should get false if the product is not active', ()=>{
+            var productMac = products.products[1].mac;           
+            var resProduct = products.setProductActive(productMac,'off');
+            var res = products.isProductActive(productMac);
+            expect(res).toEqual(false); 
+        }); 
+        
+        it('should get null if the product does not have the active property', ()=>{
+            var productMac = products.products[1].mac;           
+            var resProduct = products.setProductActive(productMac,'Off');
+            var res = products.isProductActive(productMac);
+            expect(res).toEqual(undefined); 
         });
     });
 

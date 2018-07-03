@@ -1,22 +1,67 @@
-//const fs = require('fs');
+const validate = require('validate');
+const fs = require('fs');
+const _ = require ('lodash');
 
-//var fileName = 'products-data.json'
+var fileName = 'products-data.json';//better to create a file to test and another to run
+const hexMacValidator = (val) => /[0-9A-Fa-f]{12}/g.test(val);
+const onOffValidator = (val) => ((val==='on')||(val==='off'));
 
+
+
+
+    
+
+
+
+const productSchema = new validate({
+    mac:{
+        type: String,
+        required: true,
+        length:{min:12,max:12},
+        use: {hexMacValidator}        
+    },
+    id:{
+        type: String
+    },
+    active:{
+        type: String,
+        use: {onOffValidator}
+    }
+});
+productSchema.message({
+    hexMacValidator: mac => `${mac} must be a valid haxadecimal mac.`,
+    onOffValidator: mac => `${mac} must be a on or off string.`
+});
+
+const ledSchema = new validate({
+    yellow:{
+        required: true,
+        type: String,
+        use: {onOffValidator}
+    },
+    green:{
+        required: true,
+        type: String,
+        use: {onOffValidator}
+    }
+});
 
 class Products {
     constructor(){
         this.products= [];      
     }
-
+    
     addProductByMac (mac) {       
         var product = {
           mac
         };
-        var duplicateProducts = this.products.filter((product) => product.mac === mac);
-              
-        if (duplicateProducts.length === 0) {
-          this.products.push(product);
-           return product;
+        if(productSchema.validate(product).length==0){
+            var duplicateProducts = this.products.filter((product) => product.mac === mac);
+                
+            if (duplicateProducts.length === 0) {
+                this.products.push(product);
+                return product;
+            }
         }
     }
 
@@ -25,11 +70,13 @@ class Products {
           mac,
           id          
         };
-        var duplicateProducts = this.products.filter((product) => ((product.mac === mac)||(product.id === id)));
-          
-        if (duplicateProducts.length === 0) {
-          this.products.push(product);
-          return product;
+        if(productSchema.validate(product).length==0){
+            var duplicateProducts = this.products.filter((product) => ((product.mac === mac)||(product.id === id)));
+            
+            if (duplicateProducts.length === 0) {
+                this.products.push(product);
+                return product;
+            }
         }
     }
 
@@ -47,10 +94,12 @@ class Products {
     }
 
     setProductLed (mac, led) {
-        var filteredProducts = this.products.filter((product) => product.mac === mac);
-        if (filteredProducts.length > 0) {
-            filteredProducts[0].led = led;
-            return filteredProducts[0];
+        if(ledSchema.validate(led).length==0){        
+            var filteredProducts = this.products.filter((product) => product.mac === mac);
+            if (filteredProducts.length > 0) {
+                filteredProducts[0].led = led;
+                return filteredProducts[0];
+            }
         }
     }
     
@@ -77,7 +126,25 @@ class Products {
             return filteredProducts[0];
         }
     }
-
+    setProductActive(mac, active){
+        if(onOffValidator(active)){
+            var filteredProducts = this.products.filter((product) => product.mac === mac);
+            if (filteredProducts.length > 0) {
+                filteredProducts[0].active = active;
+                return filteredProducts[0];
+            }
+        }
+    }
+    isProductActive(mac){
+        var product = this.getProductByMac(mac);
+        if(product){
+            if(product.active==='on'){
+                return true;
+            }else if(product.active==='off'){
+                return false;
+            }
+        }
+    }
     getProductByMac (mac) {
         return this.products.filter((product) => product.mac === mac)[0];
     }
@@ -100,7 +167,26 @@ class Products {
            this.products = this.products.filter((product) => product.id !== id);
         }
         return product;        
-    }   
+    }  
+
+    writeProductsToFile (callback) {
+        var mappedProducts=this.products.map((product) => {
+            return { mac: product.mac, id: product.id};
+        });
+        fs.writeFile(fileName, JSON.stringify(mappedProducts),(err) => {
+            callback(err);            
+        });  
+    }
+    readProductsFromFile (callback) {
+        fs.readFile(fileName, (err, data) => {
+            if(!err){
+                var readProducts = JSON.parse(data);                
+                var mergedProducts = _.unionBy(this.products,readProducts,"mac");              
+                this.products=mergedProducts;        
+            }
+            callback(err);
+        });
+    } 
 }
 
 module.exports = {Products};

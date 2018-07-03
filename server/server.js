@@ -53,7 +53,8 @@ io.on('connection', (socket)=>{
 
   mqttClient.on('message', (topic, message) => {
     console.log(`Received message: Topic=${topic} Message=${message}`);
-    
+    //var mac = getMacFromTopic(topic);
+
     socket.emit('receivedMQTTMessage',{
       topic: topic,
       message: message.toString(),
@@ -65,6 +66,10 @@ io.on('connection', (socket)=>{
 
 });
 
+function getMacFromTopic(topic){
+    var splittedTopic = topic.split('/');
+    return splittedTopic[2];
+};
 
 function publishMQTTMessage (msg, id) {
   console.log(`Message:${msg}  Topic:${topicPrefix}/${id}/command`);
