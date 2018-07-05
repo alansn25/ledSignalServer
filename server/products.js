@@ -1,140 +1,149 @@
-const validate = require('validate');
+const Joi = require('joi');
 const fs = require('fs');
 const _ = require ('lodash');
 
 var fileName = 'products-data.json';//better to create a file to test and another to run
-const hexMacValidator = (val) => /[0-9A-Fa-f]{12}/g.test(val);
-const onOffValidator = (val) => ((val==='on')||(val==='off'));
 
-
-
-
-    
-
-
-
-const productSchema = new validate({
-    mac:{
-        type: String,
-        required: true,
-        length:{min:12,max:12},
-        use: {hexMacValidator}        
-    },
-    id:{
-        type: String
-    },
-    active:{
-        type: String,
-        use: {onOffValidator}
-    }
-});
-productSchema.message({
-    hexMacValidator: mac => `${mac} must be a valid haxadecimal mac.`,
-    onOffValidator: mac => `${mac} must be a on or off string.`
+const ledSchema = Joi.object().keys({    
+    yellow: Joi.string().required().valid('on','off'),
+    green: Joi.string().required().valid('on','off')
 });
 
-const ledSchema = new validate({
-    yellow:{
-        required: true,
-        type: String,
-        use: {onOffValidator}
-    },
-    green:{
-        required: true,
-        type: String,
-        use: {onOffValidator}
-    }
+const productSchema = Joi.object().keys({
+    mac: Joi.string().length(12).hex().required(),
+    id: Joi.string(),
+    active: Joi.string().valid('on','off'),    
 });
 
 class Products {
     constructor(){
         this.products= [];      
-    }
+    };
     
     addProductByMac (mac) {       
         var product = {
           mac
         };
-        if(productSchema.validate(product).length==0){
+        var result= Joi.validate(product, productSchema);        
+        if(result.error===null){ 
             var duplicateProducts = this.products.filter((product) => product.mac === mac);
                 
             if (duplicateProducts.length === 0) {
                 this.products.push(product);
+                this.writeProductsToFile((err)=>{                   
+                    console.log(`Error writing to file: ${err}`);
+                });
                 return product;
             }
         }
-    }
+    };
 
     addProductByMacAndId (mac, id) {
         var product = {
           mac,
           id          
         };
-        if(productSchema.validate(product).length==0){
+        var result= Joi.validate(product, productSchema);        
+        if(result.error===null){
             var duplicateProducts = this.products.filter((product) => ((product.mac === mac)||(product.id === id)));
             
             if (duplicateProducts.length === 0) {
                 this.products.push(product);
+                this.writeProductsToFile((err)=>{                   
+                    if(err){
+                        console.log(`Error writing to file: ${err}`);
+                    }else{
+                        console.log(`Wrote to file successful. `);
+                    }
+                });
                 return product;
             }
         }
-    }
+    };
 
     setProductId (mac, id) {
        
         var duplicateProducts = this.products.filter((product) => product.id === id);
           
         if (duplicateProducts.length === 0) {
-            var filteredProducts = this.products.filter((product) => product.mac === mac);
-            if (filteredProducts.length > 0) {
-                filteredProducts[0].id = id;
-                return filteredProducts[0];
+            var product = this.getProductByMac(mac);
+            if(product){
+                product.id = id;
+                this.writeProductsToFile((err)=>{                   
+                    if(err){
+                        console.log(`Error writing to file: ${err}`);
+                    }else{
+                        console.log(`Wrote to file successful.`);
+                    }
+                });
+                return product;
             }
         }    
-    }
+    };
 
     setProductLed (mac, led) {
-        if(ledSchema.validate(led).length==0){        
-            var filteredProducts = this.products.filter((product) => product.mac === mac);
-            if (filteredProducts.length > 0) {
-                filteredProducts[0].led = led;
-                return filteredProducts[0];
+        var result = Joi.validate(led, ledSchema);        
+        if(result.error===null){           
+            var product = this.getProductByMac(mac);
+            if(product){
+                product.led = led;
+                return product;
             }
         }
-    }
+    };
     
     setProductFirmware (mac, firmware) {
-        var filteredProducts = this.products.filter((product) => product.mac === mac);
-        if (filteredProducts.length > 0) {
-            filteredProducts[0].firmware = firmware;
-            return filteredProducts[0];
+        var product = this.getProductByMac(mac);
+        if(product){
+            product.firmware = firmware;
+            return product;
         }
-    }
+    };
     
     setProductStatus (mac, status) {
-        var filteredProducts = this.products.filter((product) => product.mac === mac);
-        if (filteredProducts.length > 0) {
-            filteredProducts[0].status = status;
-            return filteredProducts[0];
+        var product = this.getProductByMac(mac);
+        if(product){
+            product.status = status;
+            return product;
         }
-    }
+    };
     
     setProductNetwork (mac, network) {
-        var filteredProducts = this.products.filter((product) => product.mac === mac);
-        if (filteredProducts.length > 0) {
-            filteredProducts[0].network = network;
-            return filteredProducts[0];
+        var product = this.getProductByMac(mac);
+        if(product){
+            product.network = network;
+            return product;
+        }        
+    };
+    setProductGlobal(mac, global) {//not fastest because has to look up for the product 5 times but easier
+        var product = this.getProductByMac(mac);
+        if(product){
+            if(global.led){
+                this.setProductLed(mac, global.led);
+            }
+            if(global.firmware){
+                this.setProductFirmware(mac, global.firmware);
+            }
+            if(global.status){
+                this.setProductStatus(mac, global.status);
+            }
+            if(global.network){
+                this.setProductNetwork(mac, global.network);
+            }  
+            return product;         
         }
-    }
+    };
     setProductActive(mac, active){
-        if(onOffValidator(active)){
-            var filteredProducts = this.products.filter((product) => product.mac === mac);
-            if (filteredProducts.length > 0) {
-                filteredProducts[0].active = active;
-                return filteredProducts[0];
+        var result= Joi.validate(active, Joi.string().valid('on','off').required());        
+        if(result.error===null){         
+            var product = this.getProductByMac(mac);
+            if(product){           
+                product.active = active;
+                return product;
             }
         }
-    }
+    };
+    
     isProductActive(mac){
         var product = this.getProductByMac(mac);
         if(product){
@@ -144,14 +153,14 @@ class Products {
                 return false;
             }
         }
-    }
+    };
     getProductByMac (mac) {
         return this.products.filter((product) => product.mac === mac)[0];
-    }
+    };
     
     getProductById (id) {        
         return this.products.filter((product) => product.id === id)[0];        
-    }
+    };
     
     removeProductByMac (mac) {
         var product = this.getProductByMac(mac);
@@ -159,7 +168,7 @@ class Products {
            this.products = this.products.filter((product) => product.mac !== mac);
         }
         return product;        
-    }
+    };
 
     removeProductById (id) {
         var product = this.getProductById(id);
@@ -167,7 +176,7 @@ class Products {
            this.products = this.products.filter((product) => product.id !== id);
         }
         return product;        
-    }  
+    }; 
 
     writeProductsToFile (callback) {
         var mappedProducts=this.products.map((product) => {
@@ -176,7 +185,7 @@ class Products {
         fs.writeFile(fileName, JSON.stringify(mappedProducts),(err) => {
             callback(err);            
         });  
-    }
+    };
     readProductsFromFile (callback) {
         fs.readFile(fileName, (err, data) => {
             if(!err){
@@ -186,7 +195,17 @@ class Products {
             }
             callback(err);
         });
+    };
+    printProduct(product){
+        console.log('----Product----');
+        console.log(JSON.stringify(product,undefined,2));
     } 
+    printAllProducts(){
+        console.log('----All Products----');
+        console.log(JSON.stringify( this.products,undefined,2));
+    } 
+
+    
 }
 
 module.exports = {Products};

@@ -1,6 +1,7 @@
 const expect = require('expect');
 const fs = require('fs');
 const {Products} = require('./products');
+
 var fileName = 'products-data.json';// it has to get this from the file products.js instead of here, also better to create a file to test and another to run
 
 
@@ -328,6 +329,46 @@ describe('Product',() =>{
         });
     });
 
+    describe('setProductGlobal',() =>{
+        it('should set product global', ()=>{
+            var productMac = products.products[1].mac;
+            var productGlobal = {
+                led:{
+                    yellow:"on",
+                    green:"off"
+                },
+                firmware:{
+                    major:0,
+                    minor:1,
+                    rev:5,
+                    build:1806231907,
+                    bin:2
+                },
+                status:{
+                    mem:35808,
+                    rst_cause:6
+                },
+                network:{
+                    ssid:"JEAD",
+                    bssid:"B0487AC69B9C",
+                    ch:6,
+                    ip:"192.168.1.127",
+                    mask:"255.255.255.0",
+                    gw:"192.168.1.1"
+                }               
+            };
+            var resProduct = products.setProductGlobal(productMac,productGlobal);
+            expect(products.products[1].led).toEqual(productGlobal.led); 
+            expect(resProduct.led).toEqual(productGlobal.led);            
+            expect(products.products[1].firmware).toEqual(productGlobal.firmware); 
+            expect(resProduct.firmware).toEqual(productGlobal.firmware);            
+            expect(products.products[1].status).toEqual(productGlobal.status); 
+            expect(resProduct.status).toEqual(productGlobal.status);
+            expect(products.products[1].network).toEqual(productGlobal.network); 
+            expect(resProduct.network).toEqual(productGlobal.network);        
+        });
+    });
+
     describe('setProductActive',() =>{
         it('should set product active on', ()=>{
             var productMac = products.products[1].mac;
@@ -354,7 +395,7 @@ describe('Product',() =>{
             expect(resProduct).toBeFalsy();        
         });
     });
-
+    
     describe('isProductActive',() =>{
         it('should get true if the product is active', ()=>{
             var productMac = products.products[1].mac;           
