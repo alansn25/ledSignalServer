@@ -418,7 +418,30 @@ describe('Product',() =>{
             expect(res).toEqual(undefined); 
         });
     });
+    describe('getProduct',() =>{
+        it('should get the product by mac', ()=>{
+            var productMac = products.products[1].mac;
+            var resProduct = products.getProduct(productMac);
+            expect(products.products[1]).toEqual(resProduct); 
+        });
 
+        it('should not be able to get the product by mac with the wrong mac', ()=>{
+            var productMac = '123456789072';
+            var resProduct = products.getProduct(productMac);
+            expect(resProduct).toBeFalsy();             
+        });
+        it('should get the product by id', ()=>{
+            var productId = products.products[1].id;
+            var resProduct = products.getProduct(productId);
+            expect(products.products[1]).toEqual(resProduct); 
+        });
+
+        it('should not be able to get the product by id with the wrong id', ()=>{
+            var productId = products.products[1].id+'oashdas';
+            var resProduct = products.getProduct(productId);
+            expect(resProduct).toBeFalsy(); 
+        });
+    });
     describe('getProductByMac',() =>{
         it('should get the product by mac', ()=>{
             var productMac = products.products[1].mac;

@@ -31,7 +31,11 @@ class Products {
             if (duplicateProducts.length === 0) {
                 this.products.push(product);
                 this.writeProductsToFile((err)=>{                   
-                    console.log(`Error writing to file: ${err}`);
+                    if(err){
+                        console.log(`Error writing to file: ${err}`);
+                    }else{
+                        console.log(`Wrote to file successful. `);
+                    }
                 });
                 return product;
             }
@@ -66,7 +70,7 @@ class Products {
         var duplicateProducts = this.products.filter((product) => product.id === id);
           
         if (duplicateProducts.length === 0) {
-            var product = this.getProductByMac(mac);
+            var product = this.getProduct(mac);
             if(product){
                 product.id = id;
                 this.writeProductsToFile((err)=>{                   
@@ -84,7 +88,7 @@ class Products {
     setProductLed (mac, led) {
         var result = Joi.validate(led, ledSchema);        
         if(result.error===null){           
-            var product = this.getProductByMac(mac);
+            var product = this.getProduct(mac);
             if(product){
                 product.led = led;
                 return product;
@@ -93,7 +97,7 @@ class Products {
     };
     
     setProductFirmware (mac, firmware) {
-        var product = this.getProductByMac(mac);
+        var product = this.getProduct(mac);
         if(product){
             product.firmware = firmware;
             return product;
@@ -101,7 +105,7 @@ class Products {
     };
     
     setProductStatus (mac, status) {
-        var product = this.getProductByMac(mac);
+        var product = this.getProduct(mac);
         if(product){
             product.status = status;
             return product;
@@ -109,14 +113,14 @@ class Products {
     };
     
     setProductNetwork (mac, network) {
-        var product = this.getProductByMac(mac);
+        var product = this.getProduct(mac);
         if(product){
             product.network = network;
             return product;
         }        
     };
     setProductGlobal(mac, global) {//not fastest because has to look up for the product 5 times but easier
-        var product = this.getProductByMac(mac);
+        var product = this.getProduct(mac);
         if(product){
             if(global.led){
                 this.setProductLed(mac, global.led);
@@ -136,7 +140,7 @@ class Products {
     setProductActive(mac, active){
         var result= Joi.validate(active, Joi.string().valid('on','off').required());        
         if(result.error===null){         
-            var product = this.getProductByMac(mac);
+            var product = this.getProduct(mac);
             if(product){           
                 product.active = active;
                 return product;
@@ -145,7 +149,7 @@ class Products {
     };
     
     isProductActive(mac){
-        var product = this.getProductByMac(mac);
+        var product = this.getProduct(mac);
         if(product){
             if(product.active==='on'){
                 return true;
@@ -154,10 +158,13 @@ class Products {
             }
         }
     };
-    getProductByMac (mac) {
-        return this.products.filter((product) => product.mac === mac)[0];
+    getProduct (param) {
+        return this.products.filter((product) => ((product.mac === param)||(product.id === param)))[0];
     };
-    
+    getProductByMac (mac) {        
+        return this.products.filter((product) => product.mac === mac)[0];        
+    };
+
     getProductById (id) {        
         return this.products.filter((product) => product.id === id)[0];        
     };

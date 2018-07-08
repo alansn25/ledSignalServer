@@ -5,6 +5,7 @@ const {MqttUtils} = require('./mqtt-utils');
 describe('MqttUtils',() =>{
     var products;
     var mqttUtils;
+    
     beforeEach(() =>{
         products = new Products();
         products.products =[
@@ -267,7 +268,18 @@ describe('MqttUtils',() =>{
             expect(resProduct.network).toEqual(message.network);
             expect(mqttUtils.products.products).toContain(resProduct);
         });        
-    });    
+    });
+    /* describe('Receive MQTT Message',() =>{
+        it('be able to receive mqtt message and add product', (done)=>{
+            var mac = 'AE387FB50983';
+            var message= {
+                yellow: 'on',
+                green: 'off',
+            }; 
+            mqttUtils.publishMqttMessage(mqttUtils.productToServerCommandFeedbackTopic(mac), message);
+            expect(message).toEqual(message);                     
+        });        
+    });  */    
 });
 
 

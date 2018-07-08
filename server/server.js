@@ -18,10 +18,6 @@ var readline = require('readline');
 const publicPath = path.join(__dirname, '../public')
 
 const port = process.env.PORT || 3000;
-//const mqttClient = mqtt.connect('mqtt://broker.hivemq.com');
-
-//var topicPrefix = 'jkldd684hsg26os';
-//var topicID = '0001';
 
 var app = express();
 var server = http.createServer(app);
@@ -39,18 +35,12 @@ var mqttUtils = new MqttUtils(products);
 
 app.use(express.static(publicPath));
 
-/* mqttClient.on('connect', () => {
-  console.log(`Connected`);
-  mqttClient.subscribe(`${topicPrefix}/#`);
-  //console.log(`Subscribed to ${topicPrefix}/#`);
- 
-}); */
-
+ //aqui funciona
 var rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   terminal: false
-});
+}); 
 
 /* const macOptions = {
   describe: 'The Mac of the product',
@@ -127,16 +117,181 @@ const argv = yargs
   .help()
   .argv; */
 
-/* process.stdin.resume();
+ process.stdin.resume();
 process.stdin.setEncoding('utf8');
 
 
-process.stdin.on('data', function (text) {
+/* process.stdin.on('data', function (text) {
   console.log(`Chegou aqui:${text}`);
-  program.parse(text);
-}); */
-
+ var textArray=text.split(" ");
+ console.log(`Chegou aqui2:${textArray}`);
+ textArray.unshift('nothing');
+ textArray.unshift('nothing');
+ program.parse(textArray);
+}); 
+ */
 rl.on('line', function (line) {
+  //console.log(`Chegou aqui:${text}`);
+ var textArray=line.split(" ");
+ console.log(`Chegou aqui2:${textArray}`);
+ textArray.unshift('nothing');
+ textArray.unshift('nothing');
+ program.parse(textArray);
+}); 
+
+program
+  .command('reqLed <mac> ')
+  .alias('rl')
+  .description('Request Led Status')
+  .action((mac) => {
+    var result = mqttUtils.requestLedStatus(mac);
+    if (result) {
+      console.log(`Message was sent:`);
+      mqttUtils.printMessage(result.topic, result.message);
+    } else {
+      console.log(`Message was not sent.`);
+    }
+  });
+  program
+  .command('comLed <mac> <yellow> <green> ')
+  .alias('cl')
+  .description('Command Led')
+  .action((mac, yellow, green) => {        
+    var result = mqttUtils.sendLedCommandParameters(mac, yellow, green);
+    if (result) {
+      console.log(`Message was sent:`);
+      mqttUtils.printMessage(result.topic, result.message);
+    } else {
+      console.log(`Message not sent.`);
+    }
+  });
+
+  program
+  .command('reqFirmware <mac>')
+  .alias('rf')
+  .description('Request Firmware Info ')
+  .action((mac) => {        
+    var result = mqttUtils.requestFirmwareInfo(mac);
+    if (result) {
+      console.log(`Message was sent:`);
+      mqttUtils.printMessage(result.topic, result.message);
+    } else {
+      console.log(`Message not sent.`);
+    }
+  });
+
+  program
+  .command('reqNetwork <mac>')
+  .alias('rn')
+  .description('Request Network Info')
+  .action((mac) => {        
+    var result = mqttUtils.requestNetworkInfo(mac);
+    if (result) {
+      console.log(`Message was sent:`);
+      mqttUtils.printMessage(result.topic, result.message);
+    } else {
+      console.log(`Message not sent.`);
+    }
+  });
+
+  program
+  .command('reqStatus <mac>')
+  .alias('rs')
+  .description('Request Status Info')
+  .action((mac) => {        
+    var result = mqttUtils.requestStatusInfo(mac);
+    if (result) {
+      console.log(`Message was sent:`);
+      mqttUtils.printMessage(result.topic, result.message);
+    } else {
+      console.log(`Message not sent.`);
+    }
+  });
+
+  program
+  .command('reqGloba <mac>')
+  .alias('rg')
+  .description('Request Global Info')
+  .action((mac) => {        
+    var result = mqttUtils.requestGlobalInfo(mac);
+    if (result) {
+      console.log(`Message was sent:`);
+      mqttUtils.printMessage(result.topic, result.message);
+    } else {
+      console.log(`Message not sent.`);
+    }
+  });
+
+  program
+  .command('getProduct <param>')
+  .alias('gp')
+  .description('Get Product')
+  .action((param) => {        
+    var result = products.getProduc(param);
+    if (result) {
+      console.log(`Product was found:`);
+      products.printProduct(result);
+    } else {
+      console.log(`Product was not found.`);
+    }
+  });
+
+  program
+  .command('setId <mac> <id>')
+  .alias('si')
+  .description('Set Product Id')
+  .action((mac) => {        
+    var result = products.setProductId(mac, id);
+    if (result) {
+      console.log(`The id was set:`);
+      products.printProduct(result);
+    } else {
+      console.log(`Product was not found.`);
+    }
+  });
+
+  program
+  .command('addProduct <mac> [id]')
+  .alias('ap')
+  .description('Set Product Id')
+  .action((mac, id) => {    
+    if(id){
+      result = products.addProductbyMacAndId(mac);
+    }else{
+      result = products.addProductbyMac(mac);
+    }         
+    if (result) {
+      console.log(`The product was added:`);
+      products.printProduct(result);
+    } else {
+      console.log(`Product was not added.`);
+    }
+  });
+
+  program
+  .command('list')
+  .alias('li')
+  .description('List All Products')
+  .action(() => {    
+    products.printAllProducts();
+  });
+
+  program
+  .command('help')
+  .alias('h')
+  .description('Help')
+  .action(() => {    
+    program.help();
+  });
+
+
+
+
+
+  //program.parse(process.stdin);
+
+//aqui é onde funciona
+/*rl.on('line', function (line) {
   var res = line.split(' ');
   var command = res[0];
   if (command == 'sled') {
@@ -233,7 +388,7 @@ rl.on('line', function (line) {
   } else {
     console.log('default:' + command);
   }
-});
+});*/
 
 
 

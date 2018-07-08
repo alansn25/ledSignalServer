@@ -17,11 +17,19 @@ class MqttUtils {
         });
 
         this.mqttClient.on('message', (topic, message) => {
-            var objMessage = JSON.parse(message);
+            var objMessage;
+            try {
+                objMessage = JSON.parse(message);
+            } catch (e) {
+                objMessage = message;
+            }
+            
             console.log(`Received message:`);
             this.printMessage(topic, message);
             var mac = this.getMacFromTopic(topic);  
             
+            this.products.addProductByMac(mac);
+
             switch(topic){
                 case this.productToServerActiveTopic():
                     handleReceiveActiveMessage (mac, objMessage);
@@ -61,7 +69,7 @@ class MqttUtils {
         var message={
             yellow,
             green,
-        };        
+        };             
         if(messageUtils.isLedMessageValid(message)){
             if(messageUtils.isMacValid(mac)){
                 var topic = this.serverToProductCommandTopic(mac);
@@ -246,7 +254,7 @@ class MqttUtils {
         console.log('---Message---' );
         console.log(`MAC: ${this.getMacFromTopic(topic)}`);
         console.log(`Topic: ${topic}`);
-        console.log(`Message: ${message}`);
+        console.log(`Message: ${JSON.stringify(message)}`);
     };
 
 }
