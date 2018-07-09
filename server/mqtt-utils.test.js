@@ -269,6 +269,14 @@ describe('MqttUtils',() =>{
             expect(mqttUtils.products.products).toContain(resProduct);
         });        
     });
+    describe('getTopicSufix',() =>{
+        it('should return the sufix of the topic', ()=>{
+            var topic = `ledsig/v1/AE387FB50983/lsig/req/info/led`;
+            var answer = `lsig/req/info/led`;
+            var resProduct = mqttUtils.getTopicSufix(topic); 
+            expect(resProduct).toEqual(answer);           
+        });        
+    });
     /* describe('Receive MQTT Message',() =>{
         it('be able to receive mqtt message and add product', (done)=>{
             var mac = 'AE387FB50983';

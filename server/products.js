@@ -14,12 +14,25 @@ const productSchema = Joi.object().keys({
     id: Joi.string(),
     active: Joi.string().valid('on','off'),    
 });
-
-class Products {
+         
+class Products extends events{
     constructor(){
-        this.products= [];      
+        this.products= []; 
+        super();
+        this.listenToWriteFile();
+             
     };
-    
+    listenToWriteFile() {
+        this.on(writeFile, () => {
+            this.writeProductsToFile((err)=>{                   
+                if(err){
+                    console.log(`Error writing to file: ${err}`);
+                }else{
+                    console.log(`Wrote to file successful.`);
+                }
+            });
+        })
+    };
     addProductByMac (mac) {       
         var product = {
           mac

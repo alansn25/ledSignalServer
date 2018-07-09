@@ -175,6 +175,12 @@ class MqttUtils {
         this.mqttClient.publish(topic, message);   
     };
 
+    getTopicSufix(topic){
+        var topicArray=topic.split('/');
+        topicArray = topicArray.slice(3);
+        return topicArray.join('/');
+    }
+
     receiveAllTopic () {
         return `ledsig/v1/+/lsig/#`;
     };
