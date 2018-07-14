@@ -224,15 +224,15 @@ describe('input-commands',() =>{
         });
         
     });
-    /* describe('addProduct <mac> [id]',() =>{
-         it('should add product without id', ()=>{
+     /* describe('addProduct <mac> [id]',() =>{
+          it('should add product without id', ()=>{
             var mac = '185D24679A12';           
             var input = `addProduct ${mac}`;
             var spy =  sinon.spy(products, 'addProductByMac');             
             stdin.send(input);             
             sinon.assert.calledWithExactly(spy, mac);   
             sinon.restore();        
-        }); 
+        });  
           it('should add product with id', ()=>{
             var mac = '185D24679A14';
             var id = "ledsig2";
@@ -242,13 +242,13 @@ describe('input-commands',() =>{
             sinon.assert.calledWithExactly(aspy, mac, id);           
         });
  
-        it('should add product with id through alias', ()=>{
+         it('should add product with id through alias', ()=>{
             var mac = '185D24679A14';
             var id = "ledsig2";
             var input = `ap ${mac} ${id}`;
             var spy =  sinon.spy(products, 'addProductbyMacAndId');             
             stdin.send(input);             
             sinon.assert.calledWithExactly(spy, mac, id);           
-        }); 
-    }); */ 
+        });  
+    });   */
 }); 

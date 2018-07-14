@@ -20,14 +20,7 @@ class InputCommands {
         program.parse(textArray);
       }); 
 
-
-
-       /*  rl.on('line', function (line) {  
-            var textArray=line.split(" "); 
-            textArray.unshift('nothing');
-            textArray.unshift('nothing');
-            program.parse(textArray);
-        });  */
+      
 
   program
   .command('reqLed <mac> ')
@@ -141,15 +134,15 @@ class InputCommands {
   });
 
   program
-  .command('addProduct <mac> <id>')
+  .command('addProduct <mac> [id]')
   .alias('ap')
   .description('Set Product Id')
   .action((mac, id) => {    
-    //if(id){
-      result = products.addProductbyMacAndId(mac);
-    //}else{
-    //  result = products.addProductbyMac(mac);
-    //}         
+    if(id){
+      result = products.addProductbyMacAndId(mac, id);
+    }else{
+      result = products.addProductbyMac(mac);
+    }         
     if (result) {
       console.log(`The product was added:`);
       products.printProduct(result);
