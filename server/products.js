@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const fs = require('fs');
 const _ = require ('lodash');
+const events = require('events');
 
 var fileName = 'products-data.json';//better to create a file to test and another to run
 
@@ -17,13 +18,15 @@ const productSchema = Joi.object().keys({
          
 class Products extends events{
     constructor(){
-        this.products= []; 
         super();
+        this.products= []; 
+        //super();
         this.listenToWriteFile();
+        this.addProductByMacAndId=this.addProductByMacAndId.bind(this);
              
     };
     listenToWriteFile() {
-        this.on(writeFile, () => {
+        this.on('writeFile', () => {
             this.writeProductsToFile((err)=>{                   
                 if(err){
                     console.log(`Error writing to file: ${err}`);
@@ -33,7 +36,7 @@ class Products extends events{
             });
         })
     };
-    addProductByMac (mac) {       
+    addProductByMac(mac) {       
         var product = {
           mac
         };

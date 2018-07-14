@@ -13,7 +13,7 @@ class MqttUtils {
         this.mqttClient.on('connect', () => {
             this.mqttClient.subscribe(this.receiveAllTopic ());
             this.mqttClient.subscribe(this.receiveActiveTopic ());
-            console.log(`Subscribed to ${this.receiveAllTopic}`);           
+            //console.log(`Subscribed to ${this.receiveAllTopic}`);           
         });
 
         this.mqttClient.on('message', (topic, message) => {
@@ -25,7 +25,7 @@ class MqttUtils {
             }
             
             console.log(`Received message:`);
-            this.printMessage(topic, message);
+            this.printMessage(topic, objMessage);
             var mac = this.getMacFromTopic(topic);  
             
             this.products.addProductByMac(mac);
@@ -257,10 +257,13 @@ class MqttUtils {
         return splittedTopic[2];
     };
     printMessage(topic, message) {
-        console.log('---Message---' );
+       /*  console.log('---Message---' );
         console.log(`MAC: ${this.getMacFromTopic(topic)}`);
         console.log(`Topic: ${topic}`);
+        console.log(`Message: ${message}`);
         console.log(`Message: ${JSON.stringify(message)}`);
+        console.log(`Message.data: ${JSON.stringify(message.data)}`);
+        console.log(`Message.data: ${message.data}`); */
     };
 
 }

@@ -23,6 +23,8 @@
     "yargs": "^11.0.0"
   },
   "devDependencies": {
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "mock-stdin": "^0.3.1",
+    "sinon": "^6.1.3"
   }
 }
