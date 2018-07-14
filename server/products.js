@@ -2,8 +2,13 @@ const Joi = require('joi');
 const fs = require('fs');
 const _ = require ('lodash');
 const events = require('events');
+var fileName;
+if(process.env.NODE_ENV==='test'){
+    fileName = 'products-data.test.json';//better to create a file to test and another to run
+}else{
+    fileName = 'products-data.json';//better to create a file to test and another to run
+}
 
-var fileName = 'products-data.json';//better to create a file to test and another to run
 
 const ledSchema = Joi.object().keys({    
     yellow: Joi.string().required().valid('on','off'),
@@ -25,7 +30,7 @@ class Products extends events{
         this.addProductByMacAndId=this.addProductByMacAndId.bind(this);
              
     };
-    listenToWriteFile() {
+     listenToWriteFile() {
         this.on('writeFile', () => {
             this.writeProductsToFile((err)=>{                   
                 if(err){
@@ -35,7 +40,11 @@ class Products extends events{
                 }
             });
         })
+    }; 
+    getFilename(){
+        return fileName;
     };
+
     addProductByMac(mac) {       
         var product = {
           mac

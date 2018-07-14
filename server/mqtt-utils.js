@@ -5,6 +5,12 @@ const {MessageUtils} = require('./message-utils');
 
 
 var messageUtils =new MessageUtils();
+var topicPrefix;
+if(process.env.NODE_ENV==='test'){
+    topicPrefix = 'ledsig/test/';
+}else{
+    topicPrefix = 'ledsig/v1/';
+}
 
 class MqttUtils {
     constructor(products){
@@ -17,47 +23,51 @@ class MqttUtils {
         });
 
         this.mqttClient.on('message', (topic, message) => {
+            var stringMessage=message.toString().replace(/\0/g, "");//removes null character           
             var objMessage;
             try {
-                objMessage = JSON.parse(message);
+                objMessage = JSON.parse(stringMessage);
+                console.log(`converted message:${objMessage}`);
             } catch (e) {
-                objMessage = message;
+                objMessage = stringMessage;
+                console.log(`catch error message:${objMessage}`);
             }
-            
-            console.log(`Received message:`);
+            console.log(`Received message:`);            
             this.printMessage(topic, objMessage);
             var mac = this.getMacFromTopic(topic);  
             
             this.products.addProductByMac(mac);
 
             switch(topic){
-                case this.productToServerActiveTopic():
-                    handleReceiveActiveMessage (mac, objMessage);
+                case this.productToServerActiveTopic(mac):
+                    var product = this.handleReceiveActiveMessage (mac, objMessage);
+                    products.printProduct(product);
                 break;
-                case this.productToServerCommandFeedbackTopic():
-                    handleReceiveCommandFeedbackMessage (mac, objMessage);
+                case this.productToServerCommandFeedbackTopic(mac):
+                    this.handleReceiveCommandFeedbackMessage (mac, objMessage);
                 break;
-                case this.productToServerRequestLedStatusReplyTopic():
-                    handleReceiveLedStatusReplyMessage (mac, objMessage)
+                case this.productToServerRequestLedStatusReplyTopic(mac):
+                    this.handleReceiveLedStatusReplyMessage (mac, objMessage)
                 break;
-                case this.productToServerRequestFirmwareInfoReplyTopic():
-                    handleReceiveRequestFirmwareInfoReplyMessage (mac, objMessage);
+                case this.productToServerRequestFirmwareInfoReplyTopic(mac):
+                    this.handleReceiveRequestFirmwareInfoReplyMessage (mac, objMessage);
                 break;
-                case this.productToServerRequestStatusInfoReplyTopic():
-                    handleReceiveRequestStatusInfoReplyMessage (mac, objMessage);
+                case this.productToServerRequestStatusInfoReplyTopic(mac):
+                    this.handleReceiveRequestStatusInfoReplyMessage (mac, objMessage);
                 break;
-                case this.productToServerRequestNetworkInfoReplyTopic():
-                    handleReceiveRequestNetworkInfoReplyMessage (mac, objMessage);
+                case this.productToServerRequestNetworkInfoReplyTopic(mac):
+                    this.handleReceiveRequestNetworkInfoReplyMessage (mac, objMessage);
                 break;
-                case this.productToServerRequestGlobalInfoReplyTopic():
-                    handleReceiveRequestGlobalInfoReplyMessage (mac, objMessage);
+                case this.productToServerRequestGlobalInfoReplyTopic(mac):
+                    this.handleReceiveRequestGlobalInfoReplyMessage (mac, objMessage);
                 break;
-                case this.productToServerFirmwareUpdateReplyTopic():
+                case this.productToServerFirmwareUpdateReplyTopic(mac):
                     console.log(`Firmware Update Reply Message: `);
                     this.printMessage(topic, message);
                 break;
                 default:
                     console.log(`Unknowm Message:`);
+                    
                     this.printMessage(topic, message);
 
             }
@@ -75,9 +85,17 @@ class MqttUtils {
                 var topic = this.serverToProductCommandTopic(mac);
                 this.publishMqttMessage(topic, JSON.stringify(message));
                 return {topic,message}; 
+            }else{
+                var product = this.products.getProduct(mac);
+                if(product){
+                    var topic = this.serverToProductCommandTopic(product.mac);
+                    this.publishMqttMessage(topic, JSON.stringify(message));
+                    return {topic,message}; 
+                }
             }            
         }
     };
+
 
     sendLedCommandObj(mac, messageObj) {        
         if(messageUtils.isLedMessageValid(messageObj)){            
@@ -85,7 +103,14 @@ class MqttUtils {
                 var topic = this.serverToProductCommandTopic(mac);                
                 this.publishMqttMessage(topic, JSON.stringify(messageObj));
                 return {topic:topic,message:messageObj};
-            }
+            }else{
+                var product = this.products.getProduct(mac);
+                if(product){
+                    var topic = this.serverToProductCommandTopic(product.mac);
+                    this.publishMqttMessage(topic, JSON.stringify(messageObj));
+                    return {topic:topic,message:messageObj}; 
+                }
+            } 
         }
     };
 
@@ -94,8 +119,15 @@ class MqttUtils {
             if(messageUtils.isMacValid(mac)){
                 var topic = this.serverToProductFirmwareUpdateTopic(mac);
                 this.publishMqttMessage(topic,JSON.stringify(messageObj));
-                return {topic,messageObj};
-            }
+                return {topic:topic,message:messageObj};
+            }else{
+                var product = this.products.getProduct(mac);
+                if(product){
+                    var topic = this.serverToProductFirmwareUpdateTopic(product.mac);
+                    this.publishMqttMessage(topic, JSON.stringify(messageObj));
+                    return {topic:topic,message:messageObj}; 
+                }
+            } 
         }
     };
 
@@ -105,6 +137,13 @@ class MqttUtils {
             var message = '{}';
             this.publishMqttMessage(topic,message); 
             return {topic,message}; 
+        }else{
+            var product = this.products.getProduct(mac);
+            if(product){
+                var topic = this.serverToProductRequestLedStatusTopic(product.mac);
+                this.publishMqttMessage(topic, JSON.stringify(message));
+                return {topic,message}; 
+            }
         }
     }
 
@@ -114,6 +153,13 @@ class MqttUtils {
             var message = '{}';
             this.publishMqttMessage(topic, message); 
             return {topic, message};
+        }else{
+            var product = this.products.getProduct(mac);
+            if(product){
+                var topic = this.serverToProductRequestFirmwareInfoTopic(product.mac);
+                this.publishMqttMessage(topic, JSON.stringify(message));
+                return {topic,message}; 
+            }
         }
     }
 
@@ -123,6 +169,13 @@ class MqttUtils {
             var message = '{}';
             this.publishMqttMessage(topic, message); 
             return {topic, message}; 
+        }else{
+            var product = this.products.getProduct(mac);
+            if(product){
+                var topic = this.serverToProductRequestStatusInfoTopic(product.mac);
+                this.publishMqttMessage(topic, JSON.stringify(message));
+                return {topic,message}; 
+            }
         }
     }
 
@@ -132,6 +185,13 @@ class MqttUtils {
             var message = '{}';
             this.publishMqttMessage(topic, message); 
             return {topic, message};
+        }else{
+            var product = this.products.getProduct(mac);
+            if(product){
+                var topic = this.serverToProductRequestNetworkInfoTopic(product.mac);
+                this.publishMqttMessage(topic, JSON.stringify(message));
+                return {topic,message}; 
+            }
         }
     }
 
@@ -141,6 +201,13 @@ class MqttUtils {
             var message = '{}';
             this.publishMqttMessage(topic, message); 
             return {topic, message};
+        }else{
+            var product = this.products.getProduct(mac);
+            if(product){
+                var topic = this.serverToProductRequestGlobalInfoTopic(product.mac);
+                this.publishMqttMessage(topic, JSON.stringify(message));
+                return {topic,message}; 
+            }
         }
     }
     
@@ -180,8 +247,82 @@ class MqttUtils {
         topicArray = topicArray.slice(3);
         return topicArray.join('/');
     }
-
     receiveAllTopic () {
+        return `${topicPrefix}+/lsig/#`;
+    };
+    receiveActiveTopic () {
+        return `${topicPrefix}+/active/#`;
+    };
+
+    serverToProducGeneralTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/#`;
+    };
+
+    productToServerActiveTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/active`;
+    };
+
+    serverToProductCommandTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/cmd/led`;
+    };
+
+    productToServerCommandFeedbackTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/lsig/cmd/led`;
+    };
+
+    serverToProductRequestLedStatusTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/req/info/led`;
+    };
+
+    productToServerRequestLedStatusReplyTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/lsig/req/info/led`;
+    };
+
+    serverToProductRequestFirmwareInfoTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/req/info/firmware`;
+    };
+
+    productToServerRequestFirmwareInfoReplyTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/lsig/req/info/firmware`;
+    };
+
+    serverToProductRequestStatusInfoTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/req/info/status`;
+    };
+
+    productToServerRequestStatusInfoReplyTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/lsig/req/info/status`;
+    };
+
+    serverToProductRequestNetworkInfoTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/req/info/network`;
+    };
+
+    productToServerRequestNetworkInfoReplyTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/lsig/req/info/network`;
+    };
+
+    serverToProductRequestGlobalInfoTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/req/info/global`;
+    };
+
+    productToServerRequestGlobalInfoReplyTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/lsig/req/info/global`;
+    };
+
+    serverToProductFirmwareUpdateTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/cmd/update/start`;
+    };
+
+    productToServerFirmwareUpdateReplyTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/lsig/update/start`;
+    };
+
+    getMacFromTopic(topic) {
+        var splittedTopic = topic.split('/');
+        return splittedTopic[2];
+    };
+    /* receiveAllTopic () {
         return `ledsig/v1/+/lsig/#`;
     };
     receiveActiveTopic () {
@@ -255,15 +396,13 @@ class MqttUtils {
     getMacFromTopic(topic) {
         var splittedTopic = topic.split('/');
         return splittedTopic[2];
-    };
+    }; */
     printMessage(topic, message) {
-       /*  console.log('---Message---' );
+         console.log('---Message---' );
         console.log(`MAC: ${this.getMacFromTopic(topic)}`);
         console.log(`Topic: ${topic}`);
         console.log(`Message: ${message}`);
-        console.log(`Message: ${JSON.stringify(message)}`);
-        console.log(`Message.data: ${JSON.stringify(message.data)}`);
-        console.log(`Message.data: ${message.data}`); */
+        console.log(`Message StringFy: ${JSON.stringify(message)}`);        
     };
 
 }

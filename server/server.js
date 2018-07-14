@@ -1,20 +1,21 @@
-//const _ = require('lodash');
-const yargs = require('yargs');
+console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
 const express = require('express');
 const path = require('path');
-//const mqtt = require('mqtt');
 const socketIO = require('socket.io');
 const http = require('http');
-var moment = require('moment');
+//var moment = require('moment');
+console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
 const {MqttUtils} = require('./mqtt-utils');
+console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
 const {Products} = require('./products');
-var program = require('commander');
-var readline = require('readline');
+//var program = require('commander');
 const {InputCommands} = require('./input-commands');
 
 const publicPath = path.join(__dirname, '../public')
 
 const port = process.env.PORT || 3000;
+
+
 
 var app = express();
 var server = http.createServer(app);
