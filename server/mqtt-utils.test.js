@@ -7,7 +7,7 @@ describe('MqttUtils',() =>{
     var mqttUtils;
     
     beforeEach(() =>{
-        products = new Products();
+       /*  products = new Products();
         products.products =[
             {
                 mac:'123456789001',
@@ -62,10 +62,10 @@ describe('MqttUtils',() =>{
                 mac:'123456789004'           
             }
         ]
-        mqttUtils = new MqttUtils(products);
+        mqttUtils = new MqttUtils(products); */
 
     });
-    describe('sendLedCommandParameters',() =>{
+    /* describe('sendLedCommandParameters',() =>{
         it('should Send Led Command using parameters', ()=>{
             var mac = 'EFD456789ABC';
             var message = {
@@ -131,9 +131,9 @@ describe('MqttUtils',() =>{
             var resMessage = mqttUtils.sendLedCommandObj(mac, message);
             expect(resMessage).toBeFalsy();     
         }); 
-    }); 
+    });  */
 
-    describe('handleReceiveActiveMessage',() =>{
+    /*describe('handleReceiveActiveMessage',() =>{
         it('should set Product Active on', ()=>{
             var mac = products.products[0].mac;
             var message = 'on';
@@ -276,7 +276,7 @@ describe('MqttUtils',() =>{
             var resProduct = mqttUtils.getTopicSufix(topic); 
             expect(resProduct).toEqual(answer);           
         });        
-    });
+    });*/
     /* describe('Receive MQTT Message',() =>{
         it('be able to receive mqtt message and add product', (done)=>{
             var mac = 'AE387FB50983';

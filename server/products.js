@@ -2,6 +2,9 @@ const Joi = require('joi');
 const fs = require('fs');
 const _ = require ('lodash');
 const events = require('events');
+const {Product} = require('./product');
+const eventEmitter = require('./event-emitter');
+
 var fileName;
 if(process.env.NODE_ENV==='test'){
     fileName = 'products-data.test.json';//better to create a file to test and another to run
@@ -10,10 +13,10 @@ if(process.env.NODE_ENV==='test'){
 }
 
 
-const ledSchema = Joi.object().keys({    
+/* const ledSchema = Joi.object().keys({    
     yellow: Joi.string().required().valid('on','off'),
     green: Joi.string().required().valid('on','off')
-});
+}); */
 
 const productSchema = Joi.object().keys({
     mac: Joi.string().length(12).hex().required(),
@@ -21,17 +24,17 @@ const productSchema = Joi.object().keys({
     active: Joi.string().valid('on','off'),    
 });
          
-class Products extends events{
+class Products {
     constructor(){
-        super();
-        this.products= []; 
         //super();
+        this.products= []; 
+        
         this.listenToWriteFile();
-        this.addProductByMacAndId=this.addProductByMacAndId.bind(this);
+        //this.addProductByMacAndId=this.addProductByMacAndId.bind(this);
              
     };
      listenToWriteFile() {
-        this.on('writeFile', () => {
+        eventEmitter.on('writeFile', () => {
             this.writeProductsToFile((err)=>{                   
                 if(err){
                     console.log(`Error writing to file: ${err}`);
@@ -45,144 +48,38 @@ class Products extends events{
         return fileName;
     };
 
-    addProductByMac(mac) {       
-        var product = {
-          mac
-        };
-        var result= Joi.validate(product, productSchema);        
-        if(result.error===null){ 
-            var duplicateProducts = this.products.filter((product) => product.mac === mac);
-                
-            if (duplicateProducts.length === 0) {
-                this.products.push(product);
-                this.writeProductsToFile((err)=>{                   
-                    if(err){
-                        console.log(`Error writing to file: ${err}`);
-                    }else{
-                        console.log(`Wrote to file successful. `);
-                    }
-                });
-                return product;
-            }
-        }
-    };
-
-    addProductByMacAndId (mac, id) {
-        var product = {
-          mac,
-          id          
-        };
-        var result= Joi.validate(product, productSchema);        
-        if(result.error===null){
-            var duplicateProducts = this.products.filter((product) => ((product.mac === mac)||(product.id === id)));
-            
-            if (duplicateProducts.length === 0) {
-                this.products.push(product);
-                this.writeProductsToFile((err)=>{                   
-                    if(err){
-                        console.log(`Error writing to file: ${err}`);
-                    }else{
-                        console.log(`Wrote to file successful. `);
-                    }
-                });
-                return product;
-            }
-        }
-    };
-
-    setProductId (mac, id) {
-       
-        var duplicateProducts = this.products.filter((product) => product.id === id);
-          
+    addProduct(mac, id=null) {       
+        var product;
+        var duplicateProducts;
+        if(id){
+            product = {
+                mac,
+                id
+            };
+            duplicateProducts = this.products.filter((product) => ((product.mac === mac)||(product.id === id)));
+        }else{
+            product = {
+                mac
+            };
+            duplicateProducts = this.products.filter((product) => product.mac === mac);
+        }                
         if (duplicateProducts.length === 0) {
-            var product = this.getProduct(mac);
-            if(product){
-                product.id = id;
+            var result= Joi.validate(product, productSchema); 
+            if(result.error===null){           
+                var product=new Product(mac, id);
+                this.products.push(product);
                 this.writeProductsToFile((err)=>{                   
                     if(err){
                         console.log(`Error writing to file: ${err}`);
                     }else{
-                        console.log(`Wrote to file successful.`);
+                        console.log(`Wrote to file successful. `);
                     }
                 });
                 return product;
             }
-        }    
-    };
-
-    setProductLed (mac, led) {
-        var result = Joi.validate(led, ledSchema);        
-        if(result.error===null){           
-            var product = this.getProduct(mac);
-            if(product){
-                product.led = led;
-                return product;
-            }
         }
     };
-    
-    setProductFirmware (mac, firmware) {
-        var product = this.getProduct(mac);
-        if(product){
-            product.firmware = firmware;
-            return product;
-        }
-    };
-    
-    setProductStatus (mac, status) {
-        var product = this.getProduct(mac);
-        if(product){
-            product.status = status;
-            return product;
-        }
-    };
-    
-    setProductNetwork (mac, network) {
-        var product = this.getProduct(mac);
-        if(product){
-            product.network = network;
-            return product;
-        }        
-    };
-    setProductGlobal(mac, global) {//not fastest because has to look up for the product 5 times but easier
-        var product = this.getProduct(mac);
-        if(product){
-            if(global.led){
-                this.setProductLed(mac, global.led);
-            }
-            if(global.firmware){
-                this.setProductFirmware(mac, global.firmware);
-            }
-            if(global.status){
-                this.setProductStatus(mac, global.status);
-            }
-            if(global.network){
-                this.setProductNetwork(mac, global.network);
-            }  
-            return product;         
-        }
-    };
-    setProductActive(mac, active){
-        var result= Joi.validate(active, Joi.string().valid('on','off').required());        
-        if(result.error===null){         
-            var product = this.getProduct(mac);
-            if(product){           
-                product.active = active;
-                return product;
-            }
-        }
-    };
-    
-    isProductActive(mac){
-        var product = this.getProduct(mac);
-        if(product){
-            if(product.active==='on'){
-                return true;
-            }else if(product.active==='off'){
-                return false;
-            }
-        }
-    };
+   
     getProduct (param) {
         return this.products.filter((product) => ((product.mac === param)||(product.id === param)))[0];
     };
@@ -223,7 +120,12 @@ class Products extends events{
             if(!err){
                 var readProducts = JSON.parse(data);                
                 var mergedProducts = _.unionBy(this.products,readProducts,"mac");              
-                this.products=mergedProducts;        
+                
+                mergedProducts.forEach((productArray)=>{
+                    var product = new Product(productArray.mac,productArray.id);
+                    this.products.push(product);
+                });
+                //this.products=mergedProducts;        
             }
             callback(err);
         });
@@ -242,21 +144,6 @@ class Products extends events{
 
 module.exports = {Products};
 
-// class Person {
-//     constructor(name, age){
-//         //console.log(name, age);
-//         this.name = name;
-//         this.age = age;        
-//     }
-
-//     getUserDescription(){
-//         return `${this.name} is ${this.age} year(s) old.`
-//     }
-// }
-
-// var me = new Person('Alan', 23);
-// var description = me.getUserDescription();
-// console.log(description);
 
 
 
