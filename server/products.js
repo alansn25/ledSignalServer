@@ -30,7 +30,10 @@ class Products {
         this.products= []; 
         
         this.listenToWriteFile();
-        //this.addProductByMacAndId=this.addProductByMacAndId.bind(this);
+       
+        eventEmitter.on('addProduct', (mac) => {
+            this.addProduct(mac); 
+        })
              
     };
      listenToWriteFile() {
@@ -118,7 +121,15 @@ class Products {
     readProductsFromFile (callback) {
         fs.readFile(fileName, (err, data) => {
             if(!err){
-                var readProducts = JSON.parse(data);                
+
+
+                var readProducts;
+                try {
+                    readProducts = JSON.parse(data);
+                } catch (e) {
+                    readProducts=[];
+                }
+                                
                 var mergedProducts = _.unionBy(this.products,readProducts,"mac");              
                 
                 mergedProducts.forEach((productArray)=>{

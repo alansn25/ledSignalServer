@@ -14,6 +14,8 @@ const firmwareUpdateMessageSchema = Joi.object().keys({
     revision: Joi.number().integer().required()
 });
 
+
+
 var topicPrefix;
 if(process.env.NODE_ENV==='test'){
     topicPrefix = 'ledsig/test/';
@@ -21,7 +23,28 @@ if(process.env.NODE_ENV==='test'){
     topicPrefix = 'ledsig/v1/';
 }
 
+
+const commands={
+    reqLed:`reqLed`,
+    comLed:`comLed`,
+    reqFirmware:`reqFirmware`,
+    reqNetwork:`reqNetwork`,
+    reqStatus:`reqStatus`,
+    reqGlobal:`reqGlobal`,
+    getProduct:`getProduct`,
+    addProduct:`addProduct`,
+    list:`list`,
+    help:`help`
+    }
+
 class MessageUtils {
+    
+    /* commands(command){
+        var commands:
+    
+    } */
+
+    
 
     isMacValid(mac){     
         var result= Joi.validate(mac, Joi.string().length(12).hex().required());        
@@ -52,6 +75,14 @@ class MessageUtils {
             return false
         }        
     }
+
+    printMessage(topic, message) {
+        console.log('---Message---' );
+        console.log(`MAC: ${this.getMacFromTopic(topic)}`);
+        console.log(`Topic: ${topic}`);
+        //console.log(`Message: ${message}`);
+        console.log(`Message: ${JSON.stringify(message)}`);        
+   };
 
     getTopicSufix(topic){
         var topicArray=topic.split('/');

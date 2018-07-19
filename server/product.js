@@ -29,22 +29,23 @@ class Product {
     emitWriteFileEvent(){
         eventEmitter.emit('writeFile');
     }
-    emitMessageSuccessEvent(message){
-        eventEmitter.emit('MessageSuccess');
+    emitConnetEvent(product){
+        eventEmitter.emit('connect', product);
+    }
+    emitDisconnetEvent(product){
+        eventEmitter.emit('disconnect', product);
+    }
+    emitMessageSuccessEvent(response, message){
+        eventEmitter.emit('MessageSuccess', response, message);
     }
     emitMessageFailureEvent(error, message){
         eventEmitter.emit('MessageFailure', error, message);
     }
-    putFeedbackOnQueue(message){
-        //console.log('Adding feedback from queue:');
-        //this.printFeedbackQueue();
+    putFeedbackOnQueue(message){        
         var topicSufix=messageUtils.getTopicSufix(message.topic);
         var timerId = setTimeout(() => {           
             this.emitMessageFailureEvent('Time Out', message);
             this.removeFeedabackFromQueue(message);   
-            //console.log('time out******************'); 
-            
-
         }, feedbackTimeOut, message);
         var feeback = {
             id: topicSufix,
@@ -52,24 +53,15 @@ class Product {
             message: message
         }
         this.feedbackQueue.push(feeback);
-        //console.log('Adding feedback from queue2:');
-        //this.printFeedbackQueue();
-
     }
-    removeFeedabackFromQueue(message){
-         //console.log('Removing feedback from queue:');
-        //this.printFeedbackQueue();
+
+    removeFeedabackFromQueue(message){         
         var topicSufix = messageUtils.getTopicSufix(message.topic);
-        var feedback = _.remove(this.feedbackQueue, (element)=>element.id == topicSufix);
-       // console.log('Removing feedback from queue2:');
-       // this.printFeedbackQueue();
+        var feedback = _.remove(this.feedbackQueue, (element)=>element.id == topicSufix);       
         if(feedback[0]){
-            clearTimeout(feedback[0].timerId); 
-            //console.log('found');   
+            clearTimeout(feedback[0].timerId);                
             return feedback[0];
-        }else{
-            //console.log('did not found');
-        }                     
+        }                   
     }
 
     printFeedbackQueue(){
@@ -87,54 +79,46 @@ class Product {
         
             var feedback =this.removeFeedabackFromQueue(message);
             if(feedback){
-                this.emitMessageSuccessEvent(feedback.message);
+                this.emitMessageSuccessEvent(message,feedback.message);
+            }else{
+                this.emitMessageSuccessEvent(message,null);
             }
            
             
             switch(message.topic){
-                case messageUtils.productToServerActiveTopic(this.mac):
-                    //handleReceiveActiveMessage (this.mac, objMessage);
+                case messageUtils.productToServerActiveTopic(this.mac):                    
                     this.setActive(message.data);
                     
                 break;
-                case messageUtils.productToServerCommandFeedbackTopic(this.mac):
-                    //handleReceiveCommandFeedbackMessage (this.mac, objMessage);
+                case messageUtils.productToServerCommandFeedbackTopic(this.mac):                    
                     this.setLed(message.data);
 
                 break;
-                case messageUtils.productToServerRequestLedStatusReplyTopic(this.mac):
-                    //handleReceiveLedStatusReplyMessage (this.mac, objMessage)
+                case messageUtils.productToServerRequestLedStatusReplyTopic(this.mac):                    
                     this.setLed(message.data);
 
                 break;
-                case messageUtils.productToServerRequestFirmwareInfoReplyTopic(this.mac):
-                    //handleReceiveRequestFirmwareInfoReplyMessage (this.mac, objMessage);
+                case messageUtils.productToServerRequestFirmwareInfoReplyTopic(this.mac):                    
                     this.setFirmware(message.data);
 
                 break;
-                case messageUtils.productToServerRequestStatusInfoReplyTopic(this.mac):
-                    //handleReceiveRequestStatusInfoReplyMessage (this.mac, objMessage);
+                case messageUtils.productToServerRequestStatusInfoReplyTopic(this.mac):                    
                     this.setStatus(message.data);
 
                 break;
-                case messageUtils.productToServerRequestNetworkInfoReplyTopic(this.mac):
-                    //handleReceiveRequestNetworkInfoReplyMessage (this.mac, objMessage);
+                case messageUtils.productToServerRequestNetworkInfoReplyTopic(this.mac):                    
                     this.setNetwork(message.data);
 
                 break;
-                case messageUtils.productToServerRequestGlobalInfoReplyTopic(this.mac):
-                    //handleReceiveRequestGlobalInfoReplyMessage (this.mac, objMessage);
+                case messageUtils.productToServerRequestGlobalInfoReplyTopic(this.mac):                   
                     this.setGlobal(message.data);
 
                 break;
                 case messageUtils.productToServerFirmwareUpdateReplyTopic(this.mac):
-                    console.log(`Firmware Update Reply Message: `);
-                    //this.printMessage(topic, message);
+                    console.log(`Firmware Update Reply Message: `);                   
                 break;
                 default:
-                    console.log(`Unknowm Message:`);
-                    //this.printMessage(topic, message);
-
+                    console.log(`Unknowm Message:`);  
             }
         });
     }
@@ -190,7 +174,16 @@ class Product {
     setActive(active){       
         var result = Joi.validate(active, Joi.string().valid('on','off').required());             
         if(result.error===null){         
-            this.active=active;   
+            if(this.active){
+                this.active=active; 
+                if(this.isActive()){  
+                    this.emitConnetEvent(this);
+                }else{
+                    this.emitDisconnetEvent(this);
+                }   
+            }else{
+                this.active=active; 
+            }       
             return this;           
         }
     };
@@ -313,8 +306,95 @@ class Product {
         return message;        
     }
 
-
-    
+    /* command(command){
+        if(command.type){
+            switch(command.type){
+              case 'reqLed':              
+                var result = this.requestLedStatus();
+                if (result) {
+                
+                } else {
+                console.log(`Message was not sent.`);
+                emitFeedback('Product not found', null, command);
+                }
+                      
+              break;
+              case 'comLed':
+                var product =  products.getProduct(command.mac);
+                if(product){
+                  var result = product.sendLedCommandObj(command.data);
+                  if (result) {
+                    console.log(`Message was sent:`);
+                    mqttUtils.printMessage(result.topic, result.message);
+                  } else {
+                    console.log(`Message not sent.`);
+                    emitFeedback('Product not found', null, command);
+                  }
+                }
+                
+                
+              break;
+              case 'reqFirmware':
+                var product =  products.getProduct(command.mac);
+                if(product){
+                  var result = product.requestFirmwareInfo(command.mac);
+                  if (result) {
+                    console.log(`Message was sent:`);
+                    mqttUtils.printMessage(result.topic, result.message);
+                  } else {
+                    console.log(`Message not sent.`);
+                    emitFeedback('Product not found', null, command);
+                  }
+                }
+              break;
+              case 'reqNetwork':
+                var product =  products.getProduct(command.mac);         
+                if(product){           
+                  var result = product.requestNetworkInfo(command.mac);
+                if (result) {
+                  console.log(`Message was sent:`);
+                  mqttUtils.printMessage(result.topic, result.message);
+                } else {
+                  console.log(`Message not sent.`);
+                  emitFeedback('Product not found', null, command);
+                }
+              }
+              break;
+              case 'reqStatus':
+                var product =  products.getProduct(command.mac);         
+                if(product){           
+                  var result = product.requestStatusInfo(command.mac);
+                if (result) {
+                  console.log(`Message was sent:`);
+                  mqttUtils.printMessage(result.topic, result.message);
+                } else {
+                  console.log(`Message not sent.`);
+                  emitFeedback('Product not found', null, command);
+                }
+              }
+              break;
+              case 'reqGlobal':
+                var product =  products.getProduct(command.mac);         
+                if(product){           
+                  var result = product.requestGlobalInfo(command.mac);
+                if (result) {
+                  console.log(`Message was sent:`);
+                  mqttUtils.printMessage(result.topic, result.message);
+                } else {
+                  console.log(`Message not sent.`);
+                  emitFeedback('Product not found.', null, command);
+                }
+              }
+              break;
+              default:
+                emitFeedback('Command unknown.', null, command);
+                console.log(`Trying to send Unknown Message:`);
+                mqttUtils.printMessage(result.topic, result.message); 
+        
+            }
+          }
+    }
+     */
 }
 
 

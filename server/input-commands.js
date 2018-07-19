@@ -257,7 +257,7 @@ class InputCommands {
     }
 
     emitSendMessageEvent(message){
-      this.eventEmitter.emit('SendMessage', message);
+      this.eventEmitter.emit('command', message);
     }
 }
 module.exports = {InputCommands};
