@@ -30,12 +30,29 @@ class Products {
         this.products= []; 
         
         this.listenToWriteFile();
-       
-        eventEmitter.on('addProduct', (mac) => {
-            this.addProduct(mac); 
-        })
+        this.listenToNewProductMessage();
+        this.listenToInfoRequest();       
+
+               
              
     };
+
+    listenToNewProductMessage(){
+        eventEmitter.on('newProductMessage', (mac) => {
+            var product = this.addProduct(mac); 
+            if(product){
+                eventEmitter.emit("newProduct", product);
+            }
+                
+        });
+
+    }
+    listenToInfoRequest(){
+        eventEmitter.on('infoRequest', (info) => {
+            this.requestInfo(info);
+        });
+
+    }
      listenToWriteFile() {
         eventEmitter.on('writeFile', () => {
             this.writeProductsToFile((err)=>{                   
@@ -47,10 +64,65 @@ class Products {
             });
         })
     }; 
+    emitInfoFeedbackEvent(error, infoRequest, feedback){
+        eventEmitter.emit('infoRequestFeedback',error, infoRequest, feedback);
+    }
     getFilename(){
         return fileName;
     };
-
+    requestInfo(info){
+        if(info.type){
+            switch(info.type){
+                case 'setId':                    
+                if((info.mac)&&(info.id)){
+                    var product = this.getProduct(info.mac);                   
+                    if (product) {
+                        var result= product.setId(info.id);
+                        if(result) {
+                            this.emitInfoFeedbackEvent(null, info, result);
+                        }else{
+                            this.emitInfoFeedbackEvent("The id was not set", info, null);
+                        }                            
+                    } else {
+                        this.emitInfoFeedbackEvent("The product was not found", info, null);
+                    } 
+                }else{
+                    this.emitInfoFeedbackEvent("Missing mac or id", info, null);
+                } 
+                break;
+              case 'getProduct':              
+                var result
+                if(info.id){
+                result = this.getProduct(info.id);
+                }else{
+                    if(info.mac){
+                        result = this.getProduct(info.mac);
+                    }
+                }
+                if (result) {
+                    this.emitInfoFeedbackEvent(null, info, result); 
+                } else {
+                    this.emitInfoFeedbackEvent("Product not found", info, null);                    
+                }                          
+              break;
+              case 'addProduct':                    
+                if((info.mac)){
+                    var result = this.addProduct(info.mac, info.id);                   
+                    if (result) {
+                        this.emitInfoFeedbackEvent(null, info, result);
+                    } else {
+                        this.emitInfoFeedbackEvent("The product was not added", info, null);
+                    } 
+                }else{
+                    this.emitInfoFeedbackEvent("Missing mac", info, null);
+                }                                           
+              break;
+              case 'list':                    
+                this.emitInfoFeedbackEvent(null, info,  this.products);                                            
+              break;
+            }
+        }    
+    }
     addProduct(mac, id=null) {       
         var product;
         var duplicateProducts;

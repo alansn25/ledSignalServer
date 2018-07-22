@@ -2,50 +2,20 @@
 
 <head>
     <meta charset= "utf-8">
-    <title>LedSignal | Server</title>
+    <title>LedSignal | Test</title>
     <meta name = "viewport" content="width=device-width, initial-scale=1, user-scalable=no"> 
-    <link rel="stylesheet" href="/css/styles.css">
+    
 </head>
 
-<body class="chat">
+<body>  
     
-        
-    <div class="chat__main">
-        
-
-        <div class= "chat__footer">            
-            <form id="message-form">
-                <p><input name="client_id"  type="text"  placeholder="Client ID" autofocus autocomplete="off"/></p>
-                <input name="message"  type="text"  placeholder="Message" autofocus autocomplete="off"/>
-                <button>Send</button>
-                
-             </form>       
-              
-        </div>  
-        
-        <p class= "message" name="subscribed_topic">Subscribed to:{{topic}}</p> 
-        <ol id="messages" class= "chat__messages"></ol>   
-    </div>    
-
-    <script id="message-template" type="text/template">
-        <li class="message">
-            <div class="message__title">
-                <h4>{{from}}</h4>
-                <span>{{createdAt}}</span>
-            </div>                
-            <div class="message__body">
-                <p>{{text}}</p>
-            </div>
-        </li>
-    </script>
-
-    
+    <h1> LedSig Test</h1>
+    <p>Instruções: Usar a função requestInfo e a sendCommand através do Chrome Dev Tools passando os parametros necessários</p>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/libs/jquery-3.3.1.min.js"></script>
     <script src="/js/htmlserver.js"></script>
-    <script src="/js/libs/moment.js"></script>
-    <script src="/js/libs/mustache.js"></script>
+    
     
 </body>
 

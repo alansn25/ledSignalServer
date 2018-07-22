@@ -26,119 +26,119 @@ class InputCommands {
       }); 
 
       program
-  .command('reqLed <mac> ')
+  .command('reqLed <id/mac> ')
   .alias('rl')
   .description('Request Led Status')
-  .action((mac) => {
-    var message = {
+  .action((id) => {
+    var command = {
       type: 'reqLed',
-      mac,
+      id,
       data:''
     }    
-    this.emitSendMessageEvent(message);
+    this.emitSendCommandEvent(command);
   });
   program
-  .command('comLed <mac> <yellow> <green> ')
+  .command('comLed <id/mac> <yellow> <green> ')
   .alias('cl')
   .description('Command Led')
-  .action((mac, yellow, green) => {        
+  .action((id, yellow, green) => {        
     //var emiter = new events.EventEmitter(); 
-    var message = {
+    var command = {
       type: 'comLed',
-      mac,
+      id,
       data:{
         yellow,
         green
       }
     }
-    this.emitSendMessageEvent(message);
+    this.emitSendCommandEvent(command);
   });
 
   program
-  .command('reqFirmware <mac>')
+  .command('reqFirmware <id/mac>')
   .alias('rf')
   .description('Request Firmware Info ')
-  .action((mac) => {        
-    var message = {
+  .action((id) => {        
+    var command = {
       type: 'reqFirmware',
-      mac,
+      id,
       data:''
     }
-    this.emitSendMessageEvent(message);
+    this.emitSendCommandEvent(command);
   });
 
   program
-  .command('reqNetwork <mac>')
+  .command('reqNetwork <id/mac>')
   .alias('rn')
   .description('Request Network Info')
-  .action((mac) => {        
-    var message = {
+  .action((id) => {        
+    var command = {
       type: 'reqNetwork',
-      mac,
+      id,
       data:''
     }
-    this.emitSendMessageEvent(message);
+    this.emitSendCommandEvent(command);
   });
 
   program
-  .command('reqStatus <mac>')
+  .command('reqStatus <id/mac>')
   .alias('rs')
   .description('Request Status Info')
-  .action((mac) => {        
-    var message = {
+  .action((id) => {        
+    var command = {
       type: 'reqStatus',
-      mac,
+      id,
       data:''
     }
-    this.emitSendMessageEvent(message);
+    this.emitSendCommandEvent(command);
   });
 
   program
-  .command('reqGlobal <mac>')
+  .command('reqGlobal <id/mac>')
   .alias('rg')
   .description('Request Global Info')
-  .action((mac) => {        
-    var message = {
+  .action((id) => {        
+    var command = {
       type: 'reqGlobal',
-      mac,
+      id,
       data:''
     }
-    this.emitSendMessageEvent(message);
+    this.emitSendCommandEvent(command);
   });
 
   /* program
-  .command('reqLed <mac> ')
+  .command('reqLed <id/mac> ')
   .alias('rl')
   .description('Request Led Status')
-  .action((mac) => {
-    var result = mqttUtils.requestLedStatus(mac);
+  .action((id) => {
+    var result = mqttUtils.requestLedStatus(id);
     if (result) {
       console.log(`Message was sent:`);
-      mqttUtils.printMessage(result.topic, result.message);
+      mqttUtils.printMessage(result.topic, result.command);
     } else {
       console.log(`Message was not sent.`);
     }
   });
   program
-  .command('comLed <mac> <yellow> <green> ')
+  .command('comLed <id/mac> <yellow> <green> ')
   .alias('cl')
   .description('Command Led')
-  .action((mac, yellow, green) => {        
-    var result = mqttUtils.sendLedCommandParameters(mac, yellow, green);
+  .action((id, yellow, green) => {        
+    var result = mqttUtils.sendLedCommandParameters(id, yellow, green);
     if (result) {
       console.log(`Message was sent:`);
-      mqttUtils.printMessage(result.topic, result.message);
+      mqttUtils.printMessage(result.topic, result.command);
     } else {
       console.log(`Message not sent.`);
     }
   });
 
   program
-  .command('reqFirmware <mac>')
+  .command('reqFirmware <id/mac>')
   .alias('rf')
   .description('Request Firmware Info ')
-  .action((mac) => {        
-    var result = mqttUtils.requestFirmwareInfo(mac);
+  .action((id) => {        
+    var result = mqttUtils.requestFirmwareInfo(id);
     if (result) {
       console.log(`Message was sent:`);
       mqttUtils.printMessage(result.topic, result.message);
@@ -148,11 +148,11 @@ class InputCommands {
   });
 
   program
-  .command('reqNetwork <mac>')
+  .command('reqNetwork <id/mac>')
   .alias('rn')
   .description('Request Network Info')
-  .action((mac) => {        
-    var result = mqttUtils.requestNetworkInfo(mac);
+  .action((id) => {        
+    var result = mqttUtils.requestNetworkInfo(id);
     if (result) {
       console.log(`Message was sent:`);
       mqttUtils.printMessage(result.topic, result.message);
@@ -162,11 +162,11 @@ class InputCommands {
   });
 
   program
-  .command('reqStatus <mac>')
+  .command('reqStatus <id/mac>')
   .alias('rs')
   .description('Request Status Info')
-  .action((mac) => {        
-    var result = mqttUtils.requestStatusInfo(mac);
+  .action((id) => {        
+    var result = mqttUtils.requestStatusInfo(id);
     if (result) {
       console.log(`Message was sent:`);
       mqttUtils.printMessage(result.topic, result.message);
@@ -176,11 +176,11 @@ class InputCommands {
   });
 
   program
-  .command('reqGlobal <mac>')
+  .command('reqGlobal <id/mac>')
   .alias('rg')
   .description('Request Global Info')
-  .action((mac) => {        
-    var result = mqttUtils.requestGlobalInfo(mac);
+  .action((id) => {        
+    var result = mqttUtils.requestGlobalInfo(id);
     if (result) {
       console.log(`Message was sent:`);
       mqttUtils.printMessage(result.topic, result.message);
@@ -190,11 +190,11 @@ class InputCommands {
   }); */
 
   program
-  .command('getProduct <param>')
+  .command('getProduct <id/mac>')
   .alias('gp')
   .description('Get Product')
-  .action((param) => {        
-    var result = products.getProduct(param);
+  .action((id) => {        
+    var result = products.getProduct(id);
     if (result) {
       console.log(`Product was found:`);
       products.printProduct(result);
@@ -207,8 +207,14 @@ class InputCommands {
   .command('setId <mac> <id>')
   .alias('si')
   .description('Set Product Id')
-  .action((mac, id) => {        
-    var product = products.getProduct(mac);
+  .action((mac, id) => {  
+    var info = {
+      type: 'setId',
+      mac,
+      id
+    }
+    this.emitRequestInfoEvent(info);
+   /*  var product = products.getProduct(mac);
     if(product){
       var result = product.setId(id);
       if (result) {
@@ -217,15 +223,23 @@ class InputCommands {
       } else {
         console.log(`Product was not found.`);
       }
-    }   
+    }    */
   });
 
   program
   .command('addProduct <mac> [id]')
   .alias('ap')
-  .description('Set Product Id')
-  .action((mac, id) => {    
+  .description('Add product with mac and optional id')
+  .action((mac, id) => {
+    var info = {
+      type: 'addProduct',
+      mac,      
+    }
     if(id){
+      info.id=id;
+    }    
+    this.emitRequestInfoEvent(info);    
+   /*  if(id){
       result = products.addProductbyMacAndId(mac, id);
     }else{
       result = products.addProductbyMac(mac);
@@ -235,14 +249,18 @@ class InputCommands {
       products.printProduct(result);
     } else {
       console.log(`Product was not added.`);
-    }
+    } */
   });
 
   program
   .command('list')
   .alias('li')
   .description('List All Products')
-  .action(() => {    
+  .action(() => {  
+    var info = {
+      type: 'list'         
+    }
+    this.emitRequestInfoEvent(info);  
     products.printAllProducts();
   });
 
@@ -256,8 +274,11 @@ class InputCommands {
        
     }
 
-    emitSendMessageEvent(message){
-      this.eventEmitter.emit('command', message);
+    emitSendCommandEvent(command){
+      this.eventEmitter.emit('command', command);
+    }
+    emitRequestInfoEvent(info){
+      this.eventEmitter.emit('infoRequest', info);
     }
 }
 module.exports = {InputCommands};

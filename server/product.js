@@ -35,22 +35,22 @@ class Product {
     emitDisconnetEvent(product){
         eventEmitter.emit('disconnect', product);
     }
-    emitMessageSuccessEvent(response, message){
-        eventEmitter.emit('MessageSuccess', response, message);
+    emitFeedbackEvent(error, sendInfo, response){
+        eventEmitter.emit('commandFeedback', error, sendInfo, response);
     }
-    emitMessageFailureEvent(error, message){
+    /* emitMessageFailureEvent(error, message){
         eventEmitter.emit('MessageFailure', error, message);
-    }
-    putFeedbackOnQueue(message){        
-        var topicSufix=messageUtils.getTopicSufix(message.topic);
+    } */
+    putFeedbackOnQueue(sendInfo){        
+        var topicSufix=messageUtils.getTopicSufix(sendInfo.message.topic);
         var timerId = setTimeout(() => {           
-            this.emitMessageFailureEvent('Time Out', message);
-            this.removeFeedabackFromQueue(message);   
-        }, feedbackTimeOut, message);
+            this.removeFeedabackFromQueue(sendInfo.message);  
+            this.emitFeedbackEvent('Time Out', sendInfo, this);             
+        }, feedbackTimeOut, sendInfo);
         var feeback = {
             id: topicSufix,
             timerId: timerId,
-            message: message
+            sendInfo: sendInfo
         }
         this.feedbackQueue.push(feeback);
     }
@@ -78,11 +78,7 @@ class Product {
         eventEmitter.on(this.mac, (message) => {
         
             var feedback =this.removeFeedabackFromQueue(message);
-            if(feedback){
-                this.emitMessageSuccessEvent(message,feedback.message);
-            }else{
-                this.emitMessageSuccessEvent(message,null);
-            }
+            var error=null;
            
             
             switch(message.topic){
@@ -118,7 +114,13 @@ class Product {
                     console.log(`Firmware Update Reply Message: `);                   
                 break;
                 default:
-                    console.log(`Unknowm Message:`);  
+                    error=`Unknowm Message:`;  
+            }
+
+            if(feedback){
+                this.emitFeedbackEvent(error, feedback.sendInfo, this,);
+            }else{
+                this.emitFeedbackEvent(error, null, this);
             }
         });
     }
@@ -196,7 +198,7 @@ class Product {
         }        
     };
 
-    sendLedCommandParameters(yellow, green) {
+    sendLedCommandParameters(yellow, green, command=null) {
         var messageObj={
             yellow,
             green,
@@ -208,193 +210,216 @@ class Product {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj)
+            }  
+            var sendInfo = {
+                message,
+                command,
             }             
             eventEmitter.emit('PublishMessage', message);
-            this.putFeedbackOnQueue(message);
+            this.putFeedbackOnQueue(sendInfo);
             return message;                         
         }
     };
 
-    sendLedCommandObj(messageObj) {        
+    sendLedCommandObj(messageObj, command=null) {        
         if(messageUtils.isLedMessageValid(messageObj)){                         
             var topic = messageUtils.serverToProductCommandTopic(this.mac);                
             var message = {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj)
-            }             
+            }   
+            var sendInfo = {
+                message,
+                command,
+            }            
             eventEmitter.emit('PublishMessage', message);
-            this.putFeedbackOnQueue(message);
+            this.putFeedbackOnQueue(sendInfo);
             return message;            
         }
     };
 
-    sendFirmwareUpdate(messageObj) {
+    sendFirmwareUpdate(messageObj, command=null) {
         if(messageUtils.isFirmwareUpdateMessageValid(messageObj)){            
             var topic = messageUtils.serverToProductFirmwareUpdateTopic(this.mac);
             var message = {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj)
+            }  
+            var sendInfo = {
+                message,
+                command,
             }             
             eventEmitter.emit('PublishMessage', message);
-            this.putFeedbackOnQueue(message);
+            this.putFeedbackOnQueue(sendInfo);
             //mqttUtils.publishMqttMessage(topic,JSON.stringify(messageObj));
             return message;            
         }
     };
 
-    requestLedStatus(){        
+    
+
+    requestLedStatus(command=null){        
         var topic = messageUtils.serverToProductRequestLedStatusTopic(this.mac);            
+        
         var message = {
             mac: this.mac,
             topic: topic,
-            data:''                
-        }         
+            data:'',                       
+        }     
+        var sendInfo = {
+            message,
+            command,
+        }    
         eventEmitter.emit('PublishMessage', message); 
-        this.putFeedbackOnQueue(message);
+        this.putFeedbackOnQueue(sendInfo);
         return message;         
     }
 
-    requestFirmwareInfo(){        
+    requestFirmwareInfo(command=null){        
         var topic = messageUtils.serverToProductRequestFirmwareInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
             data:''                
         }
+        var sendInfo = {
+            message,
+            command,
+        }  
         eventEmitter.emit('PublishMessage', message);
-        this.putFeedbackOnQueue(message);
+        this.putFeedbackOnQueue(sendInfo);
         return message;        
     }
 
-    requestStatusInfo(){    
+    requestStatusInfo(command=null){    
         var topic = messageUtils.serverToProductRequestStatusInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
             data:''                
         }
+        var sendInfo = {
+            message,
+            command,
+        }  
        
         eventEmitter.emit('PublishMessage', message);
-        this.putFeedbackOnQueue(message);
+        this.putFeedbackOnQueue(sendInfo);
         return message;         
     }
 
-    requestNetworkInfo(){        
+    requestNetworkInfo(command=null){        
         var topic = messageUtils.serverToProductRequestNetworkInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
             data:''                
         } 
-        
+        var sendInfo = {
+            message,
+            command,
+        }  
         eventEmitter.emit('PublishMessage', message);
-        this.putFeedbackOnQueue(message);
+        this.putFeedbackOnQueue(sendInfo);
         return message;        
     }
 
-    requestGlobalInfo(){        
+    requestGlobalInfo(command=null){        
         var topic = messageUtils.serverToProductRequestGlobalInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
             data:''                
-        }        
+        }   
+        var sendInfo = {
+            message,
+            command,
+        }       
         eventEmitter.emit('PublishMessage', message); 
-        this.putFeedbackOnQueue(message);
+        this.putFeedbackOnQueue(sendInfo);
         return message;        
     }
 
-    /* command(command){
+     command(command){
         if(command.type){
             switch(command.type){
               case 'reqLed':              
-                var result = this.requestLedStatus();
+                var result = this.requestLedStatus(command);
                 if (result) {
-                
+                   // emitFeedback('Product not found', null, command);
+                   return result;
                 } else {
                 console.log(`Message was not sent.`);
-                emitFeedback('Product not found', null, command);
+                
                 }
                       
               break;
-              case 'comLed':
-                var product =  products.getProduct(command.mac);
-                if(product){
-                  var result = product.sendLedCommandObj(command.data);
+              case 'comLed':                   
+                  var result = this.sendLedCommandObj(command.data, command);
                   if (result) {
-                    console.log(`Message was sent:`);
-                    mqttUtils.printMessage(result.topic, result.message);
+                    return result;
                   } else {
                     console.log(`Message not sent.`);
-                    emitFeedback('Product not found', null, command);
+                   // emitFeedback('Product not found', null, command);
                   }
-                }
+                
                 
                 
               break;
-              case 'reqFirmware':
-                var product =  products.getProduct(command.mac);
-                if(product){
-                  var result = product.requestFirmwareInfo(command.mac);
+              case 'reqFirmware':               
+                  var result = this.requestFirmwareInfo(command);
                   if (result) {
                     console.log(`Message was sent:`);
-                    mqttUtils.printMessage(result.topic, result.message);
+                    return result;
                   } else {
                     console.log(`Message not sent.`);
-                    emitFeedback('Product not found', null, command);
+                    //emitFeedback('Product not found', null, command);
                   }
-                }
+                
               break;
-              case 'reqNetwork':
-                var product =  products.getProduct(command.mac);         
-                if(product){           
-                  var result = product.requestNetworkInfo(command.mac);
+              case 'reqNetwork':                         
+                  var result = this.requestNetworkInfo(command);
                 if (result) {
                   console.log(`Message was sent:`);
-                  mqttUtils.printMessage(result.topic, result.message);
+                  return result;
                 } else {
                   console.log(`Message not sent.`);
-                  emitFeedback('Product not found', null, command);
+                  //emitFeedback('Product not found', null, command);
                 }
-              }
+              
               break;
               case 'reqStatus':
-                var product =  products.getProduct(command.mac);         
-                if(product){           
-                  var result = product.requestStatusInfo(command.mac);
+                  var result = this.requestStatusInfo(command);
                 if (result) {
                   console.log(`Message was sent:`);
-                  mqttUtils.printMessage(result.topic, result.message);
+                  return result;
                 } else {
                   console.log(`Message not sent.`);
-                  emitFeedback('Product not found', null, command);
+                  //emitFeedback('Product not found', null, command);
                 }
-              }
+              
               break;
               case 'reqGlobal':
-                var product =  products.getProduct(command.mac);         
-                if(product){           
-                  var result = product.requestGlobalInfo(command.mac);
+                  var result = this.requestGlobalInfo(command);
                 if (result) {
                   console.log(`Message was sent:`);
-                  mqttUtils.printMessage(result.topic, result.message);
+                  return result;
                 } else {
                   console.log(`Message not sent.`);
-                  emitFeedback('Product not found.', null, command);
+                  //emitFeedback('Product not found.', null, command);
                 }
-              }
+              
               break;
               default:
-                emitFeedback('Command unknown.', null, command);
+                //emitFeedback('Command unknown.', null, command);
                 console.log(`Trying to send Unknown Message:`);
-                mqttUtils.printMessage(result.topic, result.message); 
-        
+                    
             }
           }
     }
-     */
+     
 }
 
 

@@ -2,6 +2,7 @@ const mqtt = require('mqtt');
 const {MessageUtils} = require('./message-utils');
 const eventEmitter = require('./event-emitter');
 const {Product} = require('./product');
+var moment = require('moment');
 
 
 var messageUtils =new MessageUtils();
@@ -31,18 +32,22 @@ class MqttUtils {
             
             var topicMac = messageUtils.getMacFromTopic(topic);
             if(eventEmitter.listenerCount(topicMac)==0){
-                eventEmitter.emit('addProduct',topicMac);                
+                eventEmitter.emit('newProductMessage',topicMac);                
             }            
             var message={
                 mac:topicMac,
                 topic: topic,
-                data:objData 
+                data:objData, 
+                timestamp: moment().format('HH:mm:SSS')
             }
             eventEmitter.emit(message.mac,message);
                        
         });
         eventEmitter.on('PublishMessage', (message) => {
+            console.log(`Publishing Message :`);
+            messageUtils.printMessage(message.topic, message.data);
             this.mqttClient.publish(message.topic, message.data);
+            
         });   
     } 
 }
