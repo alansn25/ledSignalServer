@@ -1,12 +1,7 @@
 var socket = io();
 
 
-function sendCommand (command) {
-    /* var command = {
-        type,
-        id,
-        data
-    } */
+function sendCommand (command) {    
     socket.emit('command',command);
 }
 
@@ -19,8 +14,6 @@ socket.on('commandFeedback', function (error, command, response) {
     console.log(`Error:${error}`);
     console.log(`command:${JSON.stringify(command)}`);
     console.log(`response:${JSON.stringify(response)}`);
-
-
 });
 
 socket.on('infoRequestFeedback', function (error, infoRequest, response) {
@@ -36,12 +29,12 @@ socket.on('newProduct', function (product) {
 });
 
 socket.on('productConnected', function (product) {
-    console.log(`myconnect Received myconnect:`);
+    console.log(`Received productConnected:`);
     console.log(`product:${JSON.stringify(product)}`);    
 });
 
 socket.on('productDisconnected', function (product) {
-    console.log(`Received disconnect:`);
+    console.log(`Received productDisconnected:`);
     console.log(`product:${JSON.stringify(product)}`);    
 });
 

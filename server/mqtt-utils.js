@@ -46,7 +46,8 @@ class MqttUtils {
         eventEmitter.on('PublishMessage', (message) => {
             console.log(`Publishing Message :`);
             messageUtils.printMessage(message.topic, message.data);
-            this.mqttClient.publish(message.topic, message.data);
+            //this.mqttClient.publish(message.topic, message.data,{ qos: 2, retain: true } );
+            this.mqttClient.publish(message.topic, message.data );
             
         });   
     } 
