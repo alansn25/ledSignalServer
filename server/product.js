@@ -209,7 +209,8 @@ class Product {
             var message = {
                 mac: this.mac,
                 topic: topic,
-                data: JSON.stringify(messageObj)
+                data: JSON.stringify(messageObj),
+                retain: true
             }  
             var sendInfo = {
                 message,
@@ -227,7 +228,8 @@ class Product {
             var message = {
                 mac: this.mac,
                 topic: topic,
-                data: JSON.stringify(messageObj)
+                data: JSON.stringify(messageObj),
+                retain: true
             }   
             var sendInfo = {
                 message,

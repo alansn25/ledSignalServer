@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "node server/server.js",
-    "test": "set NODE_ENV=test&&mocha **/*.test.js"    
+    "test": "set NODE_ENV=test&&mocha **/*.test.js"
   },
   "name": "led-signal",
   "version": "",
@@ -10,6 +10,7 @@
     "node": "9.8.0"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "commander": "^2.16.0",
     "express": "^4.16.3",
     "joi": "^13.4.0",
@@ -17,6 +18,7 @@
     "moment": "^2.22.2",
     "mqtt": "^2.18.1",
     "socket.io": "^2.1.1",
+    "socketio-auth": "^0.1.1",
     "validate": "^4.4.1"
   },
   "devDependencies": {
