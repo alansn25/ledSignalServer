@@ -3,4 +3,6 @@ package-lock.json
 .vscode/
 products-data.json
 products-data.test.json
+config/config.json
+server/create-users-file.js
 

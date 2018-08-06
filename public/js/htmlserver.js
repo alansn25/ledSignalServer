@@ -9,6 +9,13 @@ function requestInfo (info) {
     socket.emit('infoRequest',info);
 }
 
+socket.on('connect', function(){
+    socket.emit('authentication', {username: "framework", password: "a34R7u*24Cvb/@UG&sfnbZ"});
+    socket.on('authenticated', function(err) {
+        console.log("There was an error with the authentication:", err);
+    });
+  });
+
 socket.on('commandFeedback', function (error, command, response) {
     console.log(`Received commandFeedback:`);
     console.log(`Error:${error}`);

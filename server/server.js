@@ -8,10 +8,15 @@ const {Products} = require('./products');
 const eventEmitter = require('./event-emitter');
 const {InputCommands} = require('./input-commands');
 const {MessageUtils} = require('./message-utils');
+const socketIOAuth = require('socketio-auth');
+const fs = require('fs');
+const bcrypt = require('bcryptjs'); 
 
 const publicPath = path.join(__dirname, '../public')
 
 const port = process.env.PORT || 3000;
+
+
 
 
 
@@ -85,6 +90,7 @@ eventEmitter.on('infoRequestFeedback', (error, infoRequest, feedback)=>{
 
 
 
+
 io.on('connection', (socket) => {
   console.log('New listener is up');
   
@@ -100,6 +106,74 @@ io.on('connection', (socket) => {
     console.log('User was disconnected from server');
   }); */
 
+  /* socketIOAuth(io, {
+    authenticate: authenticate,
+    postAuthenticate: postAuthenticate,
+    disconnect: disconnect,
+    timeout: 1000
+  }); */
+
+  /* socket.on('command', (command) => {
+    command.timestamp = moment().format('HH:mm:SSS');
+    var product = products.getProduct(command.id);
+    if(product){
+      var result = product.command(command);
+      if(!result){
+        emitCommandFeedback('could not handle the command', command, null);
+      }
+    }else{
+      emitCommandFeedback('Product not found', command, null);
+    }    
+  });
+
+  socket.on('infoRequest', (info) => {
+    info.timestamp = moment().format('HH:mm:SSS');
+    products.requestInfo(info);    
+  }); */
+  
+
+  
+
+
+});
+
+
+/* socketIOAuth(io, {
+  authenticate: function (socket, data, callback) {
+    //get credentials sent by the client
+    var username = data.username;
+    var password = data.password;
+    
+    checkCredentials(username, password, function(err, data){
+      if(err){
+        return callback(err);
+      }else{
+        return callback(err, data);
+      }
+    })      
+  },
+  disconnect: function (socket){
+    console.log(socket.id + ' disconnected');
+  },
+  timeout: 1000
+}); */
+const disconnect = socket => {
+  console.log(socket.id + ' disconnected');
+}
+const authenticate = async (socket, data, callback) => {
+  var username = data.username;
+  var password = data.password;
+  
+  checkCredentials(username, password, function(err, data){
+    if(err){
+      callback(err);
+    }else{
+      callback(err, data);
+    }
+  })
+};
+
+const postAuthenticate = socket => {
   socket.on('command', (command) => {
     command.timestamp = moment().format('HH:mm:SSS');
     var product = products.getProduct(command.id);
@@ -117,15 +191,41 @@ io.on('connection', (socket) => {
     info.timestamp = moment().format('HH:mm:SSS');
     products.requestInfo(info);    
   });
-  
+};
 
-});
+socketIOAuth(io, { authenticate, postAuthenticate, disconnect, timeout:1000 });
+
 function emitCommandFeedback(error, command, response){
   io.sockets.emit('commandFeedback', error, command, response);
 };
 function emitInfoFeedback(error, infoRequest, response){
   io.sockets.emit('infoRequestFeedback', error, infoRequest, response);
 };
+
+function checkCredentials(username, password, callback){
+  fs.readFile('users.json', (err, data) => {
+    if(!err){
+        var users;
+        try {
+          users = JSON.parse(data);
+        } catch (e) {
+          callback("Could not fecth any users", false);
+        }
+
+        var authorizedUser = users.filter((user) => (user.username === username));             
+        if(authorizedUser.length===0){
+          callback(null, false);
+        }else{          
+          bcrypt.compare(password, authorizedUser[0].password, (err, res)=>{
+            callback(err, res);
+          });          
+        }                         
+    }else{
+      callback(err, false);
+    }
+    
+});
+}
 
 server.listen(port, ()=>{
   console.log(`Server is up on the port ${port}`);
