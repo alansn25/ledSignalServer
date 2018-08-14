@@ -1,8 +1,13 @@
 const Joi = require('joi');
 
-const ledMessageSchema = Joi.object().keys({    
+const ledMessageSchemaOld = Joi.object().keys({    
     yellow: Joi.string().required().valid('on','off'),
     green: Joi.string().required().valid('on','off')
+});
+
+const ledMessageSchema = Joi.object().keys({    
+    led1: Joi.string().required().valid('on','off','flash'),
+    led2: Joi.string().required().valid('on','off','flash')
 });
 
 const firmwareUpdateMessageSchema = Joi.object().keys({
@@ -58,11 +63,17 @@ class MessageUtils {
 
     isLedMessageValid (message) {
         var result= Joi.validate(message,ledMessageSchema);        
+       
         if(result.error===null){
             return true;
         }else{
-            console.log(`${JSON.stringify(message)} is not a valid Led Message. Error: ${JSON.stringify(result.error.details)}`);
-            return false
+            var resultOld= Joi.validate(message,ledMessageSchemaOld);
+            if(resultOld.error===null){
+                return true;
+            }else{
+                console.log(`${JSON.stringify(message)} is not a valid Led Message. Error1: ${JSON.stringify(result.error.details)} Error2: ${JSON.stringify(resultOld.error.details)}`);
+                return false
+            }            
         }
     }
 

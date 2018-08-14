@@ -117,7 +117,7 @@ class Products {
                     this.emitInfoFeedbackEvent("Missing mac", info, null);
                 }                                           
               break;
-              case 'list':                    
+              case 'list':                   
                 this.emitInfoFeedbackEvent(null, info,  this.products);                                            
               break;
             }
@@ -215,12 +215,20 @@ class Products {
     };
     printProduct(product){
         console.log('----Product----');
-        console.log(JSON.stringify(product,undefined,2));
+        console.log(JSON.stringify( this.products,(key,value)=>{
+            if(key=="feedbackQueue") return undefined;
+            else return value;
+        },2));
     } 
     printAllProducts(){
         console.log('----All Products----');
-        console.log(JSON.stringify( this.products,undefined,2));
+        console.log(JSON.stringify( this.products,(key,value)=>{
+            if(key=="feedbackQueue") return undefined;
+            else return value;
+        },2));
     } 
+
+   
 
     
 }

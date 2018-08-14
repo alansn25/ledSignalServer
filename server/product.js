@@ -8,6 +8,10 @@ const Joi = require('joi');
 
 const feedbackTimeOut = 3000;
 const ledSchema = Joi.object().keys({    
+    led1: Joi.string().required().valid('on','off', 'flash'),
+    led2: Joi.string().required().valid('on','off', 'flash')
+});
+const ledSchemaOld = Joi.object().keys({    
     yellow: Joi.string().required().valid('on','off'),
     green: Joi.string().required().valid('on','off')
 });
@@ -141,6 +145,11 @@ class Product {
             this.led = led;
             return this;           
         }
+        result = Joi.validate(led, ledSchemaOld);        
+        if(result.error===null){           
+            this.led = led;
+            return this;           
+        }
     };
     
     setFirmware (firmware) {       
@@ -198,13 +207,41 @@ class Product {
         }        
     };
 
-    sendLedCommandParameters(yellow, green, command=null) {
-        var messageObj={
-            yellow,
-            green,
-        };                  
+    isProductUsingV2Protocol(){
+        if(this.hasOwnProperty('led')){
+            if(this.hasOwnProperty('led.green')){
+                return false;
+            }else if(this.hasOwnProperty('led.led1')){
+                return true;
+            }
+        }
+    }
 
-        if(messageUtils.isLedMessageValid(messageObj)){            
+    sendLedCommandParameters(yellow, green, command=null) {
+        if(messageUtils.isLedMessageValid(messageObj)){
+        
+            var messageObj;
+            var usingV2protocol = isProductUsingV2Protocol();
+        
+            if(usingV2protocol === true){
+                messageObj = {
+                    led1: green,
+                    led2: yellow
+                };
+            }else if(usingV2protocol === false){
+                messageObj = {
+                    green,
+                    yellow
+                };
+            }else{
+                this.requestLedStatus();
+                messageObj = {
+                    led1: green,
+                    led2: yellow
+                };
+            }                         
+
+                    
             var topic = messageUtils.serverToProductCommandTopic(this.mac);
             var message = {
                 mac: this.mac,
@@ -223,14 +260,45 @@ class Product {
     };
 
     sendLedCommandObj(messageObj, command=null) {        
-        if(messageUtils.isLedMessageValid(messageObj)){                         
-            var topic = messageUtils.serverToProductCommandTopic(this.mac);                
+        if(messageUtils.isLedMessageValid(messageObj)){
+            var topic = messageUtils.serverToProductCommandTopic(this.mac);
+            var usingV2protocol = isProductUsingV2Protocol();
+        
+            if(usingV2protocol === true){
+                if(messageObj.hasOwnProperty('green')){               
+                    messageObj.led1 = messageObj.green;               
+                    delete messageObj.green;
+                }
+                if(messageObj.hasOwnProperty('yellow')){               
+                    messageObj.led2 = messageObj.yellow;               
+                    delete messageObj.yellow;
+                }
+            }else if(usingV2protocol === false){
+                if(messageObj.hasOwnProperty('led1')){               
+                    messageObj.green = messageObj.led1;               
+                    delete messageObj.led1;
+                }
+                if(messageObj.hasOwnProperty('led2')){               
+                    messageObj.yellow = messageObj.led2;               
+                    delete messageObj.led2;
+                }
+            }else{
+                this.requestLedStatus();
+                if(messageObj.hasOwnProperty('green')){               
+                    messageObj.led1= messageObj.green;               
+                    delete messageObj.green;
+                }
+                if(messageObj.hasOwnProperty('yellow')){               
+                    messageObj.led2= messageObj.yellow;               
+                    delete messageObj.yellow;
+                }
+            }                    
             var message = {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj),
                 retain: true
-            }   
+            }             
             var sendInfo = {
                 message,
                 command,

@@ -113,7 +113,7 @@ io.on('connection', (socket) => {
     timeout: 1000
   }); */
 
-  /* socket.on('command', (command) => {
+   socket.on('command', (command) => {
     command.timestamp = moment().format('HH:mm:SSS');
     var product = products.getProduct(command.id);
     if(product){
@@ -129,7 +129,7 @@ io.on('connection', (socket) => {
   socket.on('infoRequest', (info) => {
     info.timestamp = moment().format('HH:mm:SSS');
     products.requestInfo(info);    
-  }); */
+  }); 
   
 
   
@@ -157,6 +157,8 @@ io.on('connection', (socket) => {
   },
   timeout: 1000
 }); */
+
+/*
 const disconnect = socket => {
   console.log(socket.id + ' disconnected');
 }
@@ -194,7 +196,7 @@ const postAuthenticate = socket => {
 };
 
 socketIOAuth(io, { authenticate, postAuthenticate, disconnect, timeout:1000 });
-
+*/
 function emitCommandFeedback(error, command, response){
   io.sockets.emit('commandFeedback', error, command, response);
 };
