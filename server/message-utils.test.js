@@ -49,6 +49,22 @@ describe('MessageUtils',() =>{
             var res = messageUtils.isLedMessageValid(message);
             expect(res).toBeFalsy();            
         });
+        it('should return true if led message is new version', ()=>{
+            var message={
+                led1: 'on',
+                led2: 'off',
+            };            
+            var res = messageUtils.isLedMessageValid(message);
+            expect(res).toBeTruthy();            
+        });
+        it('should return false if led message is new version and not valid', ()=>{
+            var message={
+                led1: 'off',
+                led2: 'On',
+            };            
+            var res = messageUtils.isLedMessageValid(message);
+            expect(res).toBeFalsy();            
+        });
 
         it('should return false if led message does not have a green or yellow field', ()=>{
             var message={

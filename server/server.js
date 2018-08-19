@@ -30,13 +30,13 @@ var io = socketIO(server);
 var messageUtils =new MessageUtils();
 
 var products = new Products();
-products.readProductsFromFile((err)=>{                   
+ /* products.readProductsFromFile((err)=>{                   
   if(err){
       console.log(`Error reading from file: ${err}`);
   }else{
       console.log(`Read from file successful.`);
   }
-});
+}); */ 
 var mqttUtils = new MqttUtils();
 var inputCommands = new InputCommands(products, mqttUtils);
 
@@ -52,9 +52,11 @@ eventEmitter.on('command', (command)=>{
     if(product){
       product.command(command);
     }else{
-      emitFeedback('Product not found', command, null);
+      emitCommandFeedback('Product not found', command, null);
     }
 });
+
+ 
 
 eventEmitter.on('newProduct', (product)=>{
   io.sockets.emit('newProduct', product);
@@ -73,7 +75,7 @@ eventEmitter.on('connect', (product)=>{
 
 
 eventEmitter.on('commandFeedback', (error, sendInfo, product)=>{
-  console.log('Enter on feedback');
+  console.log('Enter on commandFeedback');
   if(sendInfo){
     emitCommandFeedback(error, sendInfo.command, product);
   }else{
@@ -86,9 +88,14 @@ eventEmitter.on('infoRequestFeedback', (error, infoRequest, feedback)=>{
     emitInfoFeedback(error, infoRequest, feedback);     
 });
 
+//var product = products.getProduct('p2');
+//product.requestLedStatus();
 
-
-
+/* setTimeout(()=>{
+    var product = products.getProduct('p2');
+    product.requestLedStatus(); 
+    product.requestFirmwareInfo(); 
+},5000); */
 
 
 io.on('connection', (socket) => {
@@ -128,7 +135,7 @@ io.on('connection', (socket) => {
 
   socket.on('infoRequest', (info) => {
     info.timestamp = moment().format('HH:mm:SSS');
-    products.requestInfo(info);    
+   products.requestInfo(info);    
   }); 
   
 

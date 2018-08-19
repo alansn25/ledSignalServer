@@ -44,6 +44,15 @@ describe('Product',() =>{
             expect(product.led).toEqual(parameter);
             expect(resultProduct.led).toEqual(parameter);
         });
+        it('should set the product led with new version', ()=>{
+            var parameter ={
+                led1: 'on',
+                led2: 'off'
+            };
+            var resultProduct = product.setLed(parameter);
+            expect(product.led).toEqual(parameter);
+            expect(resultProduct.led).toEqual(parameter);
+        });
         it('should not set the product led with wrong parameters', ()=>{
             var parameter ={
                 yellow: 'On',
@@ -166,17 +175,65 @@ describe('Product',() =>{
     });
 
     describe('sendLedCommandParameters',() =>{
-        it('should Send Led Command using parameters', ()=>{
+        it('should Send Led Command using parameters with product without version', ()=>{
             //var localMac = 'EFD456F89ABC';
             var message = {
                 yellow: 'on',
                 green: 'off'
             } 
+            var message2 = {
+                led1: 'off',
+                led2: 'on'
+            } 
+            //var localProduct = new Product(localMac);
+            var resMessage = product.sendLedCommandParameters(message.yellow, message.green);
+            
+
+            expect(resMessage.data).toEqual(JSON.stringify(message2));
+            expect(resMessage.topic).toEqual(messageUtils.serverToProductCommandTopic(product.mac));
+            expect(product.mac).toEqual(messageUtils.getMacFromTopic(resMessage.topic));
+        });
+
+        it('should Send Led Command using parameters with product from old version', ()=>{
+            //var localMac = 'EFD456F89ABC';
+            var message = {
+                green: 'off',
+                yellow: 'on'                
+            } 
+            var parameter ={
+                yellow: 'off',
+                green: 'off'
+            };
+            var resultProduct = product.setLed(parameter);
             //var localProduct = new Product(localMac);
             var resMessage = product.sendLedCommandParameters(message.yellow, message.green);
             
 
             expect(resMessage.data).toEqual(JSON.stringify(message));
+            expect(resMessage.topic).toEqual(messageUtils.serverToProductCommandTopic(product.mac));
+            expect(product.mac).toEqual(messageUtils.getMacFromTopic(resMessage.topic));
+        });
+
+        it('should Send Led Command using parameters with product from new version', ()=>{
+            //var localMac = 'EFD456F89ABC';
+            var message = {
+                yellow: 'on',
+                green: 'off'
+            } 
+            var parameter ={
+                led2: 'on',
+                led1: 'off'
+            };
+            var message2 = {
+                led1: 'off',
+                led2: 'on'
+            } 
+            var resultProduct = product.setLed(parameter);
+            //var localProduct = new Product(localMac);
+            var resMessage = product.sendLedCommandParameters(message.yellow, message.green);
+            
+
+            expect(resMessage.data).toEqual(JSON.stringify(message2));
             expect(resMessage.topic).toEqual(messageUtils.serverToProductCommandTopic(product.mac));
             expect(product.mac).toEqual(messageUtils.getMacFromTopic(resMessage.topic));
         });

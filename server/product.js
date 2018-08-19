@@ -5,8 +5,9 @@ const {MqttUtils} = require('./mqtt-utils');
 const {MessageUtils} = require('./message-utils');
 const eventEmitter = require('./event-emitter');
 const Joi = require('joi');
+const {Firmwares} = require('./firmwares');
 
-const feedbackTimeOut = 3000;
+const feedbackTimeOut = 5000;
 const ledSchema = Joi.object().keys({    
     led1: Joi.string().required().valid('on','off', 'flash'),
     led2: Joi.string().required().valid('on','off', 'flash')
@@ -49,8 +50,9 @@ class Product {
         var topicSufix=messageUtils.getTopicSufix(sendInfo.message.topic);
         var timerId = setTimeout(() => {           
             this.removeFeedabackFromQueue(sendInfo.message);  
-            this.emitFeedbackEvent('Time Out', sendInfo, this);             
+            this.emitFeedbackEvent('Time Out', sendInfo, this );             
         }, feedbackTimeOut, sendInfo);
+        //var timerId = setTimeout(this.executeTimeOut.bind(this,sendInfo),feedbackTimeOut);
         var feeback = {
             id: topicSufix,
             timerId: timerId,
@@ -58,13 +60,18 @@ class Product {
         }
         this.feedbackQueue.push(feeback);
     }
-
+   /*  executeTimeOut(sendInfo){
+        this.removeFeedabackFromQueue(sendInfo.message);  
+        this.emitFeedbackEvent('Time Out', sendInfo, this );
+    } */
     removeFeedabackFromQueue(message){         
-        var topicSufix = messageUtils.getTopicSufix(message.topic);
-        var feedback = _.remove(this.feedbackQueue, (element)=>element.id == topicSufix);       
-        if(feedback[0]){
-            clearTimeout(feedback[0].timerId);                
-            return feedback[0];
+        if(this.feedbackQueue.length>0){
+            var topicSufix = messageUtils.getTopicSufix(message.topic);
+            var feedback = _.remove(this.feedbackQueue, (element)=>element.id == topicSufix);       
+            if(feedback[0]){
+                clearTimeout(feedback[0].timerId);                
+                return feedback[0];
+            }
         }                   
     }
 
@@ -87,7 +94,10 @@ class Product {
             
             switch(message.topic){
                 case messageUtils.productToServerActiveTopic(this.mac):                    
-                    this.setActive(message.data);
+                   this.setActive(message.data);
+                   if(this.isActive()){
+                       this.requestGlobalInfo();
+                   }
                     
                 break;
                 case messageUtils.productToServerCommandFeedbackTopic(this.mac):                    
@@ -123,14 +133,16 @@ class Product {
 
             if(feedback){
                 this.emitFeedbackEvent(error, feedback.sendInfo, this,);
-            }else{
+            }/*else{
                 this.emitFeedbackEvent(error, null, this);
-            }
+            }*/
         });
     }
 
 
-    
+    update () {
+
+    }
         
 
     setId (id) {               
@@ -185,15 +197,19 @@ class Product {
     setActive(active){       
         var result = Joi.validate(active, Joi.string().valid('on','off').required());             
         if(result.error===null){         
-            if(this.active){
-                this.active=active; 
-                if(this.isActive()){  
-                    this.emitConnetEvent(this);
-                }else{
-                    this.emitDisconnetEvent(this);
-                }   
+            if(this.hasOwnProperty('active')){
+                var currentActive = this.active;
+                if(currentActive!=active){
+                    this.active=active; 
+                    if(this.isActive()){  
+                        this.emitConnetEvent(this);
+                        //this.requestGlobalInfo();
+                    }else{
+                        this.emitDisconnetEvent(this);
+                    } 
+                }                  
             }else{
-                this.active=active; 
+                this.active=active;                
             }       
             return this;           
         }
@@ -206,41 +222,64 @@ class Product {
             return false;
         }        
     };
+    isFirmwareDifferent(major, minor, revision){
+        if(this.firmware){
+            if(this.major != major){
+                return true;
+            }else{
+                if(this.minor != minor){
+                    return true;
+                }else{
+                    if(this.revision != revision){
+                        return true;
+                    }else{
+                        return false;
+                    }
+                }
+            }
+        }else{
+            return undefined;
+        }
+
+    }
 
     isProductUsingV2Protocol(){
         if(this.hasOwnProperty('led')){
-            if(this.hasOwnProperty('led.green')){
+            if(_.has(this, 'led.green')){
                 return false;
-            }else if(this.hasOwnProperty('led.led1')){
+            }else if(_.has(this, 'led.led1')){
                 return true;
             }
         }
     }
 
     sendLedCommandParameters(yellow, green, command=null) {
+        
+        
+        
+        var messageObj;
+        var usingV2protocol = this.isProductUsingV2Protocol();
+    
+        if(usingV2protocol === true){
+            messageObj = {
+                led1: green,
+                led2: yellow
+            };
+        }else if(usingV2protocol === false){
+            messageObj = {
+                green,
+                yellow
+            };
+        }else{
+            this.requestLedStatus();
+            //return undefined;
+            messageObj = {
+                led1: green,
+                led2: yellow
+            };
+        }                         
+            
         if(messageUtils.isLedMessageValid(messageObj)){
-        
-            var messageObj;
-            var usingV2protocol = isProductUsingV2Protocol();
-        
-            if(usingV2protocol === true){
-                messageObj = {
-                    led1: green,
-                    led2: yellow
-                };
-            }else if(usingV2protocol === false){
-                messageObj = {
-                    green,
-                    yellow
-                };
-            }else{
-                this.requestLedStatus();
-                messageObj = {
-                    led1: green,
-                    led2: yellow
-                };
-            }                         
-
                     
             var topic = messageUtils.serverToProductCommandTopic(this.mac);
             var message = {
@@ -254,7 +293,10 @@ class Product {
                 command,
             }             
             eventEmitter.emit('PublishMessage', message);
-            this.putFeedbackOnQueue(sendInfo);
+            if(command!=null){
+                this.putFeedbackOnQueue(sendInfo);
+            }
+            //this.putFeedbackOnQueue(sendInfo);
             return message;                         
         }
     };
@@ -262,7 +304,7 @@ class Product {
     sendLedCommandObj(messageObj, command=null) {        
         if(messageUtils.isLedMessageValid(messageObj)){
             var topic = messageUtils.serverToProductCommandTopic(this.mac);
-            var usingV2protocol = isProductUsingV2Protocol();
+            var usingV2protocol = this.isProductUsingV2Protocol();
         
             if(usingV2protocol === true){
                 if(messageObj.hasOwnProperty('green')){               
@@ -275,23 +317,30 @@ class Product {
                 }
             }else if(usingV2protocol === false){
                 if(messageObj.hasOwnProperty('led1')){               
+                    if(messageObj.led1 = 'flash'){
+                        return undefined;
+                    }
                     messageObj.green = messageObj.led1;               
                     delete messageObj.led1;
                 }
-                if(messageObj.hasOwnProperty('led2')){               
+                if(messageObj.hasOwnProperty('led2')){ 
+                    if(messageObj.led2 = 'flash'){
+                        return undefined;
+                    }              
                     messageObj.yellow = messageObj.led2;               
                     delete messageObj.led2;
                 }
             }else{
                 this.requestLedStatus();
-                if(messageObj.hasOwnProperty('green')){               
+                //return undefined;
+                 if(messageObj.hasOwnProperty('green')){               
                     messageObj.led1= messageObj.green;               
                     delete messageObj.green;
                 }
                 if(messageObj.hasOwnProperty('yellow')){               
                     messageObj.led2= messageObj.yellow;               
                     delete messageObj.yellow;
-                }
+                } 
             }                    
             var message = {
                 mac: this.mac,
@@ -304,7 +353,10 @@ class Product {
                 command,
             }            
             eventEmitter.emit('PublishMessage', message);
-            this.putFeedbackOnQueue(sendInfo);
+            if(command!=null){
+                this.putFeedbackOnQueue(sendInfo);
+            }
+            
             return message;            
         }
     };
@@ -322,7 +374,10 @@ class Product {
                 command,
             }             
             eventEmitter.emit('PublishMessage', message);
-            this.putFeedbackOnQueue(sendInfo);
+            if(command!=null){
+                this.putFeedbackOnQueue(sendInfo);
+            }
+           // this.putFeedbackOnQueue(sendInfo);
             //mqttUtils.publishMqttMessage(topic,JSON.stringify(messageObj));
             return message;            
         }
@@ -343,7 +398,10 @@ class Product {
             command,
         }    
         eventEmitter.emit('PublishMessage', message); 
-        this.putFeedbackOnQueue(sendInfo);
+        if(command!=null){
+            this.putFeedbackOnQueue(sendInfo);
+        }
+        //this.putFeedbackOnQueue(sendInfo);
         return message;         
     }
 
@@ -359,7 +417,9 @@ class Product {
             command,
         }  
         eventEmitter.emit('PublishMessage', message);
-        this.putFeedbackOnQueue(sendInfo);
+        if(command!=null){
+            this.putFeedbackOnQueue(sendInfo);
+        }
         return message;        
     }
 
@@ -376,7 +436,9 @@ class Product {
         }  
        
         eventEmitter.emit('PublishMessage', message);
-        this.putFeedbackOnQueue(sendInfo);
+        if(command!=null){
+            this.putFeedbackOnQueue(sendInfo);
+        }
         return message;         
     }
 
@@ -392,7 +454,9 @@ class Product {
             command,
         }  
         eventEmitter.emit('PublishMessage', message);
-        this.putFeedbackOnQueue(sendInfo);
+        if(command!=null){
+            this.putFeedbackOnQueue(sendInfo);
+        }
         return message;        
     }
 
@@ -408,7 +472,9 @@ class Product {
             command,
         }       
         eventEmitter.emit('PublishMessage', message); 
-        this.putFeedbackOnQueue(sendInfo);
+        if(command!=null){
+            this.putFeedbackOnQueue(sendInfo);
+        }
         return message;        
     }
 
@@ -480,6 +546,37 @@ class Product {
                   console.log(`Message not sent.`);
                   //emitFeedback('Product not found.', null, command);
                 }
+              
+              break;
+              case 'update':
+                var firmwares = new Firmwares();
+                var lastFirmware = firmwares.getLastFirmware();
+                if(lastFirmware.error === null){
+                    var firmwareCopy = Object.assign({}, lastFirmware);
+                    delete firmwareCopy.version;
+                    var result = this.sendFirmwareUpdate(firmwareCopy, command);
+                    if (result) {
+                        console.log(`Message was sent:`);
+                        return result;
+                      } else {
+                        console.log(`Message not sent.`);
+                        //emitFeedback('Product not found', null, command);
+                      }
+                }
+               
+
+
+
+                
+
+                  /* var result = this.requestGlobalInfo(command);
+                if (result) {
+                  console.log(`Message was sent:`);
+                  return result;
+                } else {
+                  console.log(`Message not sent.`);
+                  //emitFeedback('Product not found.', null, command);
+                } */
               
               break;
               default:

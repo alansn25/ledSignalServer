@@ -4,6 +4,7 @@ const _ = require ('lodash');
 const events = require('events');
 const {Product} = require('./product');
 const eventEmitter = require('./event-emitter');
+const {Firmwares} = require('./firmwares');
 
 var fileName;
 if(process.env.NODE_ENV==='test'){
@@ -28,6 +29,16 @@ class Products {
     constructor(){
         //super();
         this.products= []; 
+
+         this.readProductsFromFile((err)=>{                   
+            if(err){
+                console.log(`Error reading from file: ${err}`);
+            }else{
+                console.log(`Read from file successful.`);
+            }
+        }); 
+
+        this.firmwares= new Firmwares();
         
         this.listenToWriteFile();
         this.listenToNewProductMessage();
@@ -120,8 +131,75 @@ class Products {
               case 'list':                   
                 this.emitInfoFeedbackEvent(null, info,  this.products);                                            
               break;
+              case 'addFirmware':
+                if(info.firmware){
+                    var result = this.firmwares.addFirmware(info.firmware);
+                    if(result.error===null){
+                        this.emitInfoFeedbackEvent(null, info,  result.result);
+                    }else{
+                        this.emitInfoFeedbackEvent(result.error, info,  null);
+                    }
+                    
+                }else{
+                    this.emitInfoFeedbackEvent('There was no firmware on the request', info,  null);
+                }                                                             
+              break;
+              case 'listFirmwares':                   
+                this.emitInfoFeedbackEvent(null, info,  this.firmwares.firmwares);   
+              break;
+              case 'deleteFirmware':                   
+                 if(info.version){
+                    var result = this.firmwares.deleteFirmware(info.version);
+                    if(result.error === null){
+                        this.emitInfoFeedbackEvent(null, info,  result.result);
+                    }else{
+                        this.emitInfoFeedbackEvent(result.error, info,  null);
+                    }
+                 }else{
+                    this.emitInfoFeedbackEvent('There was no version of the firmware on the request', info,  null);
+                 }                                        
+              break;
+              case 'updateFirmware':                   
+                if(info.firmware){
+                    var result = this.firmwares.updateFirmware(info.firmware);
+                    if(result.error===null){
+                        this.emitInfoFeedbackEvent(null, info,  result.result);
+                    }else{
+                        this.emitInfoFeedbackEvent(result.error, info,  null);
+                    }                    
+                }else{
+                    this.emitInfoFeedbackEvent('There was no firmware on the request', info,  null);
+                }                                           
+              break;
+              case 'updateAllProducts':                   
+                var result = this.updateAll();
+                if(result.error===null){
+                    this.emitInfoFeedbackEvent(null, info,  result.result);
+                }else{
+                    this.emitInfoFeedbackEvent(result.error, info,  null);
+                }                                               
+              break;
             }
         }    
+    }
+    updateAll(){
+        var result = {};
+        var lastFirmware = this.firmwares.getLastFirmware();
+        if(lastFirmware.error = null){
+            result.error = null;
+            var firmwareCopy = Object.assign({}, lastFirmware.result);
+            delete firmwareCopy.version;
+            result.result = [];
+            var filteredProducts = this.products.filter((product) => (product.isActive() === true));
+            filteredProducts.forEach((product) =>{
+                if(product.isFirmwareDifferent(lastFirmware.major, lastFirmware.minor, lastFirmware.revision)=== true){
+                    product.sendFirmwareUpdate(firmwareCopy, 'updateAll');
+                    result.result.push(product);
+                }
+            });
+        }else{
+            result.error = 'There was no firmware to update.';
+        }       
     }
     addProduct(mac, id=null) {       
         var product;
@@ -170,6 +248,13 @@ class Products {
         var product = this.getProductByMac(mac);
         if(product){
            this.products = this.products.filter((product) => product.mac !== mac);
+           this.writeProductsToFile((err)=>{                   
+            if(err){
+                console.log(`Error writing to file: ${err}`);
+            }else{
+                console.log(`Wrote to file successful. `);
+            }
+        });
         }
         return product;        
     };
@@ -178,6 +263,13 @@ class Products {
         var product = this.getProductById(id);
         if(product){
            this.products = this.products.filter((product) => product.id !== id);
+           this.writeProductsToFile((err)=>{                   
+            if(err){
+                console.log(`Error writing to file: ${err}`);
+            }else{
+                console.log(`Wrote to file successful. `);
+            }
+        });
         }
         return product;        
     }; 

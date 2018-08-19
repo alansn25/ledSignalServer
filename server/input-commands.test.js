@@ -89,14 +89,14 @@ describe('input-commands',() =>{
          it('should request led status', ()=>{
             var mac =  products.products[0].mac;
             var input = `reqLed ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         }); 
          it('should request led status with alias', ()=>{
             var mac =  products.products[0].mac;
             var input = `rl ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         }); 
@@ -107,7 +107,7 @@ describe('input-commands',() =>{
             var yellow = 'on';
             var green = 'off';
             var input = `comLed ${mac} ${yellow} ${green}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');            
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');            
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
@@ -116,7 +116,7 @@ describe('input-commands',() =>{
             var yellow = 'on';
             var green = 'off';
             var input = `cl ${mac} ${yellow} ${green}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');            
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');            
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
@@ -125,14 +125,14 @@ describe('input-commands',() =>{
         it('should request firmware info', ()=>{
             var mac =  products.products[0].mac;
             var input = `reqFirmware ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
         it('should request firmware info with alias', ()=>{
             var mac =  products.products[0].mac;
             var input = `rf ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
@@ -142,14 +142,14 @@ describe('input-commands',() =>{
         it('should request network info', ()=>{
             var mac =  products.products[0].mac;
             var input = `reqNetwork ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
         it('should request network info with alias', ()=>{
             var mac =  products.products[0].mac;
             var input = `rn ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
@@ -159,14 +159,14 @@ describe('input-commands',() =>{
         it('should request status info', ()=>{
             var mac =  products.products[0].mac;
             var input = `reqStatus ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
         it('should request status info with alias', ()=>{
             var mac =  products.products[0].mac;
             var input = `reqStatus ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
@@ -176,14 +176,14 @@ describe('input-commands',() =>{
         it('should request global info', ()=>{
             var mac =  products.products[0].mac;
             var input = `reqGlobal ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
         it('should request global info with alias', ()=>{
             var mac =  products.products[0].mac;
             var input = `rg ${mac}`;
-            var spy =  sinon.spy(inputCommander, 'emitSendMessageEvent');             
+            var spy =  sinon.spy(inputCommander, 'emitSendCommandEvent');             
             stdin.send(input);             
             sinon.assert.called(spy);           
         });
