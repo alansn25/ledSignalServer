@@ -535,7 +535,7 @@ class Product {
                   console.log(`Message not sent.`);
                   //emitFeedback('Product not found', null, command);
                 }
-              
+               
               break;
               case 'reqGlobal':
                   var result = this.requestGlobalInfo(command);
