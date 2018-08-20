@@ -317,14 +317,14 @@ class Product {
                 }
             }else if(usingV2protocol === false){
                 if(messageObj.hasOwnProperty('led1')){               
-                    if(messageObj.led1 = 'flash'){
+                    if(messageObj.led1 == 'flash'){
                         return undefined;
                     }
                     messageObj.green = messageObj.led1;               
                     delete messageObj.led1;
                 }
                 if(messageObj.hasOwnProperty('led2')){ 
-                    if(messageObj.led2 = 'flash'){
+                    if(messageObj.led2 == 'flash'){
                         return undefined;
                     }              
                     messageObj.yellow = messageObj.led2;               
