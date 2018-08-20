@@ -132,7 +132,7 @@ io.on('connection', (socket) => {
       emitCommandFeedback('Product not found', command, null);
     }    
   });
-
+ 
   socket.on('infoRequest', (info) => {
     info.timestamp = moment().format('HH:mm:SSS');
    products.requestInfo(info);    
