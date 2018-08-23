@@ -90,39 +90,58 @@ class Product {
         
             var feedback =this.removeFeedabackFromQueue(message);
             var error=null;
-           
+            
             
             switch(message.topic){
                 case messageUtils.productToServerActiveTopic(this.mac):                    
-                   this.setActive(message.data);
-                   if(this.isActive()){
+                   
+                this.setActive(message.data);
+                   if(this.isActive()===true){
                        this.requestGlobalInfo();
+                        if(message.hasOwnProperty('brokerVersion')){
+                            this.brokerVersion = message.brokerVersion;
+                        }
                    }
                     
                 break;
                 case messageUtils.productToServerCommandFeedbackTopic(this.mac):                    
                     this.setLed(message.data);
+                    if(message.hasOwnProperty('brokerVersion')){
+                        this.brokerVersion = message.brokerVersion;
+                    }
 
                 break;
                 case messageUtils.productToServerRequestLedStatusReplyTopic(this.mac):                    
                     this.setLed(message.data);
+                    if(message.hasOwnProperty('brokerVersion')){
+                        this.brokerVersion = message.brokerVersion;
+                    }
 
                 break;
                 case messageUtils.productToServerRequestFirmwareInfoReplyTopic(this.mac):                    
                     this.setFirmware(message.data);
+                    if(message.hasOwnProperty('brokerVersion')){
+                        this.brokerVersion = message.brokerVersion;
+                    }
 
                 break;
                 case messageUtils.productToServerRequestStatusInfoReplyTopic(this.mac):                    
                     this.setStatus(message.data);
-
+                    if(message.hasOwnProperty('brokerVersion')){
+                        this.brokerVersion = message.brokerVersion;
+                    }
                 break;
                 case messageUtils.productToServerRequestNetworkInfoReplyTopic(this.mac):                    
                     this.setNetwork(message.data);
-
+                    if(message.hasOwnProperty('brokerVersion')){
+                        this.brokerVersion = message.brokerVersion;
+                    }
                 break;
                 case messageUtils.productToServerRequestGlobalInfoReplyTopic(this.mac):                   
                     this.setGlobal(message.data);
-
+                    if(message.hasOwnProperty('brokerVersion')){
+                        this.brokerVersion = message.brokerVersion;
+                    }
                 break;
                 case messageUtils.productToServerFirmwareUpdateReplyTopic(this.mac):
                     console.log(`Firmware Update Reply Message: `);                   
@@ -140,9 +159,7 @@ class Product {
     }
 
 
-    update () {
-
-    }
+    
         
 
     setId (id) {               
@@ -250,6 +267,22 @@ class Product {
             }else if(_.has(this, 'led.led1')){
                 return true;
             }
+        }else{
+            this.requestGlobalInfo();
+        }
+    }
+
+    isProductUsingOldBroker(){
+        if(this.hasOwnProperty('firmware')){
+            return ((this.firmware.major!=0)||(this.firmware.minor!=3)||(this.firmware.revision!=1));            
+        }
+    }
+
+    sendPublishMessageEvent(message){
+        if(this.hasOwnProperty(this.brokerVersion)){
+            eventEmitter.emit(`PublishMessage${this.brokerVersion}`, message);
+        }else{
+            eventEmitter.emit('PublishMessage1', message);
         }
     }
 
@@ -286,13 +319,14 @@ class Product {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj),
-                retain: true
+                retain: true,
+                //oldBroker: this.isProductUsingOldBroker()
             }  
             var sendInfo = {
                 message,
                 command,
             }             
-            eventEmitter.emit('PublishMessage', message);
+            this.sendPublishMessageEvent(message);
             if(command!=null){
                 this.putFeedbackOnQueue(sendInfo);
             }
@@ -346,13 +380,14 @@ class Product {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj),
-                retain: true
+                retain: true,
+                //oldBroker: this.isProductUsingOldBroker()
             }             
             var sendInfo = {
                 message,
                 command,
             }            
-            eventEmitter.emit('PublishMessage', message);
+            this.sendPublishMessageEvent(message);
             if(command!=null){
                 this.putFeedbackOnQueue(sendInfo);
             }
@@ -367,13 +402,14 @@ class Product {
             var message = {
                 mac: this.mac,
                 topic: topic,
-                data: JSON.stringify(messageObj)
+                data: JSON.stringify(messageObj),
+                oldBroker: this.isProductUsingOldBroker()
             }  
             var sendInfo = {
                 message,
                 command,
             }             
-            eventEmitter.emit('PublishMessage', message);
+            this.sendPublishMessageEvent(message);
             if(command!=null){
                 this.putFeedbackOnQueue(sendInfo);
             }
@@ -391,13 +427,14 @@ class Product {
         var message = {
             mac: this.mac,
             topic: topic,
-            data:'',                       
+            data:'', 
+            oldBroker: this.isProductUsingOldBroker()                      
         }     
         var sendInfo = {
             message,
             command,
         }    
-        eventEmitter.emit('PublishMessage', message); 
+        this.sendPublishMessageEvent(message); 
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
@@ -410,13 +447,14 @@ class Product {
         var message = {
             mac: this.mac,
             topic: topic,
-            data:''                
+            data:'',
+            oldBroker: this.isProductUsingOldBroker()             
         }
         var sendInfo = {
             message,
             command,
         }  
-        eventEmitter.emit('PublishMessage', message);
+        this.sendPublishMessageEvent(message);
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
@@ -428,14 +466,15 @@ class Product {
         var message = {
             mac: this.mac,
             topic: topic,
-            data:''                
+            data:'',
+            oldBroker: this.isProductUsingOldBroker()                
         }
         var sendInfo = {
             message,
             command,
         }  
        
-        eventEmitter.emit('PublishMessage', message);
+        this.sendPublishMessageEvent(message);
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
@@ -447,13 +486,14 @@ class Product {
         var message = {
             mac: this.mac,
             topic: topic,
-            data:''                
+            data:'',
+            oldBroker: this.isProductUsingOldBroker()               
         } 
         var sendInfo = {
             message,
             command,
         }  
-        eventEmitter.emit('PublishMessage', message);
+        this.sendPublishMessageEvent(message);
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
@@ -465,13 +505,14 @@ class Product {
         var message = {
             mac: this.mac,
             topic: topic,
-            data:''                
+            data:'',
+            oldBroker: this.isProductUsingOldBroker()               
         }   
         var sendInfo = {
             message,
             command,
         }       
-        eventEmitter.emit('PublishMessage', message); 
+        this.sendPublishMessageEvent(message); 
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }

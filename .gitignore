@@ -5,4 +5,6 @@ products-data.json
 products-data.test.json
 config/config.json
 server/create-users-file.js
+server/ca.crt
+playground/mqtt_test.js
 

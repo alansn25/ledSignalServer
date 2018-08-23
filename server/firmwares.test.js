@@ -1,6 +1,6 @@
 const expect = require('expect');
 const fs = require('fs');
-const {Firmwares} = require('./firmwares');
+const {Firmwares} = require('./firmwares);
 
 
 //var fileName = 'products-data.json';// it has to get this from the file products.js instead of here, also better to create a file to test and another to run

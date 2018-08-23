@@ -10,7 +10,8 @@ const {InputCommands} = require('./input-commands');
 const {MessageUtils} = require('./message-utils');
 const socketIOAuth = require('socketio-auth');
 const fs = require('fs');
-const bcrypt = require('bcryptjs'); 
+const bcrypt = require('bcryptjs');
+var config = require('./../config/config.js'); 
 
 const publicPath = path.join(__dirname, '../public')
 

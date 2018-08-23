@@ -307,7 +307,7 @@ class Products {
     };
     printProduct(product){
         console.log('----Product----');
-        console.log(JSON.stringify( this.products,(key,value)=>{
+        console.log(JSON.stringify( product,(key,value)=>{
             if(key=="feedbackQueue") return undefined;
             else return value;
         },2));
