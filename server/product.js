@@ -170,6 +170,10 @@ class Product {
                     console.log(`Firmware Update Reply Message: `);    
                     isUpdateMessage = true;               
                 break;
+                case messageUtils.serverToProductPairStaticIpTopic(this.mac):
+                    console.log(`Firmware Update Reply Message: `);    
+                    this.setNetwork(message.data);               
+                break;
                 
                 default:
                     error=`Unknowm Message:`;  

@@ -13,7 +13,7 @@ function appendMessage(mac,event,text){
     var template = jQuery('#message-template').html();
     var html = Mustache.render(template, {
         text: text,
-        from: `MAC: ${mac} - ${event}:`        
+        from: `${ moment().format('HH:mm:SSS')} MAC: ${mac} - ${event}:`        
     });
 
     jQuery('#messages').append(html);
@@ -92,7 +92,7 @@ socket.on('commandFeedback', function (error, command, response) {
     if((currentMac!=null)&&(response!=null)){
         if(response.hasOwnProperty('mac')){
             if(response.mac==currentMac){
-                var message = `Erro: ${error} Response:${JSON.stringify(response,null,2)}`;
+                var message = `Erro: ${error}| Response:${JSON.stringify(response,null,2)}`;
                 appendMessage(response.mac,`Received Command Feedback`,message);
             }      
         }  
@@ -108,7 +108,7 @@ socket.on('infoRequestFeedback', function (error, infoRequest, response) {
     if((currentMac!=null)&&(response!=null)){
         if(response.hasOwnProperty('mac')){
             if(response.mac==currentMac){
-                var message = `Erro: ${error} Response:${JSON.stringify(response,null,2)}`;
+                var message = `Erro: ${error}| Response:${JSON.stringify(response,null,2)}`;
                 appendMessage(response.mac,`Received Info Feedback`,message);
             }   
         }     

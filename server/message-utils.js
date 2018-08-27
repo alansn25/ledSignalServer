@@ -121,7 +121,7 @@ class MessageUtils {
         return `${topicPrefix}+/lsig/#`;
     };
     receiveActiveTopic () {
-        return `${topicPrefix}+/active/#`;
+        return `${topicPrefix}+/active`;
     };
 
     serverToProducGeneralTopic (macAddress) {
@@ -189,7 +189,7 @@ class MessageUtils {
     };
 
     serverToProductPairStaticIpTopic (macAddress) {
-        return `${topicPrefix}${macAddress}/app/cmd/network`;
+        return `${topicPrefix}${macAddress}/lsig/cmd/network`;
     };
     
 

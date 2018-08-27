@@ -12,23 +12,26 @@ var messageUtils =new MessageUtils();
 class MqttUtils {
     constructor(){
         //this.products = products;
-         //var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
+         var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
+         
          //var CAfile = [process.env.CA_CERT];
          var options = {
             host: 'homolog.araujoapp.com.br',
             port: 7710,
             protocol: 'mqtts',           
-            //ca: CAfile,   
-            clientId: 'Application_2507',            
+            ca: CAfile,   
+            clientId: 'App_Servidor_Framework',            
             username: process.env.MQTT_USERNAME,
             password:process.env.MQTT_PASSWORD, 
-            rejectUnauthorized: false                      
+            //rejectUnauthorized: false                      
         }; 
 
         this.mqttClientV2 = mqtt.connect(options);
         this.mqttClientV2.on('connect', () => {
             this.mqttClientV2.subscribe(messageUtils.receiveAllTopic ());
-            this.mqttClientV2.subscribe(messageUtils.receiveActiveTopic ());                       
+            this.mqttClientV2.subscribe(messageUtils.receiveActiveTopic ());  
+            console.log("Conectou aqui!!");
+
         });
 
         this.mqttClientV2.on('message', (topic, data) => {
@@ -73,7 +76,7 @@ class MqttUtils {
 
 
  
-        this.mqttClientV1 = mqtt.connect('mqtt://broker.hivemq.com');
+         /*this.mqttClientV1 = mqtt.connect('mqtt://broker.hivemq.com');
         this.mqttClientV1.on('connect', () => {
             this.mqttClientV1.subscribe(messageUtils.receiveAllTopic ());
             this.mqttClientV1.subscribe(messageUtils.receiveActiveTopic ());                       
@@ -117,8 +120,8 @@ class MqttUtils {
             }else{
                 this.mqttClientV1.publish(message.topic, message.data, { qos: 2 } );
             }            
-        });  
-    } 
+        }); */
+    }  
 }
 
 module.exports = {MqttUtils};
