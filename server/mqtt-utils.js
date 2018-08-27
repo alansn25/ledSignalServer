@@ -13,15 +13,16 @@ class MqttUtils {
     constructor(){
         //this.products = products;
          //var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
-         var CAfile = [process.env.CA_CERT];
+         //var CAfile = [process.env.CA_CERT];
          var options = {
             host: 'homolog.araujoapp.com.br',
             port: 7710,
             protocol: 'mqtts',           
-            ca: CAfile,   
+            //ca: CAfile,   
             clientId: 'Application_2507',            
             username: process.env.MQTT_USERNAME,
-            password:process.env.MQTT_PASSWORD                        
+            password:process.env.MQTT_PASSWORD, 
+            rejectUnauthorized: false                      
         }; 
 
         this.mqttClientV2 = mqtt.connect(options);
