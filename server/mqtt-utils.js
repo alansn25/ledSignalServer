@@ -12,7 +12,7 @@ var messageUtils =new MessageUtils();
 class MqttUtils {
     constructor(){
         //this.products = products;
-        var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
+        /* var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
          var options = {
             host: 'homolog.araujoapp.com.br',
             port: 7710,
@@ -67,7 +67,7 @@ class MqttUtils {
             }else{
                 this.mqttClientV2.publish(message.topic, message.data, { qos: 2 } );
             }            
-        });
+        }); */
 
 
  
