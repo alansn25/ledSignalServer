@@ -29,6 +29,7 @@ class Product {
             this.id=id;
         }
         this.startReceiving();
+        //this.brokerVersion = {};
        
     }
     emitWriteFileEvent(){
@@ -48,6 +49,8 @@ class Product {
     } */
     putFeedbackOnQueue(sendInfo){        
         var topicSufix=messageUtils.getTopicSufix(sendInfo.message.topic);
+        //var timerId = {};
+        
         var timerId = setTimeout(() => {           
             this.removeFeedabackFromQueue(sendInfo.message);  
             this.emitFeedbackEvent('Time Out', sendInfo, this );             
@@ -59,6 +62,14 @@ class Product {
             sendInfo: sendInfo
         }
         this.feedbackQueue.push(feeback);
+      /*   if(sendInfo.message.topic === messageUtils.serverToProductFirmwareUpdateTopic(this.mac)){
+            var feeback = {
+                id: topicSufix,
+                timerId: null,
+                sendInfo: sendInfo
+            }
+            this.feedbackQueue.push(feeback);
+        } */
     }
    /*  executeTimeOut(sendInfo){
         this.removeFeedabackFromQueue(sendInfo.message);  
@@ -68,10 +79,12 @@ class Product {
         if(this.feedbackQueue.length>0){
             var topicSufix = messageUtils.getTopicSufix(message.topic);
             var feedback = _.remove(this.feedbackQueue, (element)=>element.id == topicSufix);       
-            if(feedback[0]){
-                clearTimeout(feedback[0].timerId);                
+            //if(feedback.length>1){
+            if(feedback[0]){                    
+                clearTimeout(feedback[0].timerId);                                                
                 return feedback[0];
             }
+            //}
         }                   
     }
 
@@ -84,12 +97,15 @@ class Product {
         });
         console.log(JSON.stringify( feedbackQueueCopy,undefined,2));
     }
-
+    setBrokerVersion(brokerVersionParam){
+        this.brokerVersion = brokerVersionParam;
+    }
     startReceiving(){
         eventEmitter.on(this.mac, (message) => {
         
-            var feedback =this.removeFeedabackFromQueue(message);
+            var feedback = this.removeFeedabackFromQueue(message);
             var error=null;
+            var isUpdateMessage = false;
             
             
             switch(message.topic){
@@ -97,64 +113,79 @@ class Product {
                    
                 this.setActive(message.data);
                    if(this.isActive()===true){
-                       this.requestGlobalInfo();
-                        if(message.hasOwnProperty('brokerVersion')){
+                        if(message.hasOwnProperty('brokerVersion')===true){
+                            //this.setBrokerVersion(message.brokerVersion);
                             this.brokerVersion = message.brokerVersion;
                         }
+                       this.requestGlobalInfo();
                    }
                     
                 break;
                 case messageUtils.productToServerCommandFeedbackTopic(this.mac):                    
-                    this.setLed(message.data);
+                   
                     if(message.hasOwnProperty('brokerVersion')){
                         this.brokerVersion = message.brokerVersion;
                     }
+                    this.setLed(message.data);
 
                 break;
                 case messageUtils.productToServerRequestLedStatusReplyTopic(this.mac):                    
-                    this.setLed(message.data);
-                    if(message.hasOwnProperty('brokerVersion')){
+                   
+                    if(message.hasOwnProperty('brokerVersion')===true){
                         this.brokerVersion = message.brokerVersion;
                     }
+                    this.setLed(message.data);
 
                 break;
                 case messageUtils.productToServerRequestFirmwareInfoReplyTopic(this.mac):                    
-                    this.setFirmware(message.data);
-                    if(message.hasOwnProperty('brokerVersion')){
+                    
+                    if(message.hasOwnProperty('brokerVersion')===true){
                         this.brokerVersion = message.brokerVersion;
                     }
+                    this.setFirmware(message.data);
 
                 break;
                 case messageUtils.productToServerRequestStatusInfoReplyTopic(this.mac):                    
-                    this.setStatus(message.data);
-                    if(message.hasOwnProperty('brokerVersion')){
+                    
+                    if(message.hasOwnProperty('brokerVersion')===true){
                         this.brokerVersion = message.brokerVersion;
                     }
+                    this.setStatus(message.data);
                 break;
                 case messageUtils.productToServerRequestNetworkInfoReplyTopic(this.mac):                    
-                    this.setNetwork(message.data);
-                    if(message.hasOwnProperty('brokerVersion')){
+                    
+                    if(message.hasOwnProperty('brokerVersion')===true){
                         this.brokerVersion = message.brokerVersion;
                     }
+                    this.setNetwork(message.data);
                 break;
                 case messageUtils.productToServerRequestGlobalInfoReplyTopic(this.mac):                   
-                    this.setGlobal(message.data);
-                    if(message.hasOwnProperty('brokerVersion')){
+                    
+                    if(message.hasOwnProperty('brokerVersion')===true){
                         this.brokerVersion = message.brokerVersion;
                     }
+                    this.setGlobal(message.data);
                 break;
                 case messageUtils.productToServerFirmwareUpdateReplyTopic(this.mac):
-                    console.log(`Firmware Update Reply Message: `);                   
+                    console.log(`Firmware Update Reply Message: `);    
+                    isUpdateMessage = true;               
                 break;
+                
                 default:
                     error=`Unknowm Message:`;  
             }
 
             if(feedback){
-                this.emitFeedbackEvent(error, feedback.sendInfo, this,);
-            }/*else{
-                this.emitFeedbackEvent(error, null, this);
-            }*/
+                if(isUpdateMessage === false){
+                    this.emitFeedbackEvent(error, feedback.sendInfo, this);
+                }else{
+                    message.data.mac = this.mac;
+                    this.emitFeedbackEvent(error, feedback.sendInfo, message.data);
+                }                
+            }else if(isUpdateMessage === true){
+                message.data.mac = this.mac;
+                this.emitFeedbackEvent(error, null, message.data);
+            }
         });
     }
 
@@ -218,7 +249,7 @@ class Product {
                 var currentActive = this.active;
                 if(currentActive!=active){
                     this.active=active; 
-                    if(this.isActive()){  
+                    if(this.isActive()===true){  
                         this.emitConnetEvent(this);
                         //this.requestGlobalInfo();
                     }else{
@@ -272,23 +303,17 @@ class Product {
         }
     }
 
-    isProductUsingOldBroker(){
-        if(this.hasOwnProperty('firmware')){
-            return ((this.firmware.major!=0)||(this.firmware.minor!=3)||(this.firmware.revision!=1));            
-        }
-    }
+    
 
     sendPublishMessageEvent(message){
-        if(this.hasOwnProperty(this.brokerVersion)){
+        if(this.hasOwnProperty('brokerVersion')===true){
             eventEmitter.emit(`PublishMessage${this.brokerVersion}`, message);
         }else{
             eventEmitter.emit('PublishMessage1', message);
         }
     }
 
-    sendLedCommandParameters(yellow, green, command=null) {
-        
-        
+    sendLedCommandParameters(yellow, green, command=null) {        
         
         var messageObj;
         var usingV2protocol = this.isProductUsingV2Protocol();
@@ -312,20 +337,19 @@ class Product {
             };
         }                         
             
-        if(messageUtils.isLedMessageValid(messageObj)){
+        if(messageUtils.isLedMessageValid(messageObj)===true){
                     
             var topic = messageUtils.serverToProductCommandTopic(this.mac);
             var message = {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj),
-                retain: true,
-                //oldBroker: this.isProductUsingOldBroker()
-            }  
+                retain: true                
+            };  
             var sendInfo = {
                 message,
-                command,
-            }             
+                command
+            };            
             this.sendPublishMessageEvent(message);
             if(command!=null){
                 this.putFeedbackOnQueue(sendInfo);
@@ -336,7 +360,8 @@ class Product {
     };
 
     sendLedCommandObj(messageObj, command=null) {        
-        if(messageUtils.isLedMessageValid(messageObj)){
+        var result = {};
+        if(messageUtils.isLedMessageValid(messageObj)===true){
             var topic = messageUtils.serverToProductCommandTopic(this.mac);
             var usingV2protocol = this.isProductUsingV2Protocol();
         
@@ -380,252 +405,324 @@ class Product {
                 mac: this.mac,
                 topic: topic,
                 data: JSON.stringify(messageObj),
-                retain: true,
-                //oldBroker: this.isProductUsingOldBroker()
-            }             
+                retain: true                
+            };             
             var sendInfo = {
                 message,
-                command,
-            }            
+                command
+            };            
             this.sendPublishMessageEvent(message);
             if(command!=null){
                 this.putFeedbackOnQueue(sendInfo);
             }
-            
-            return message;            
+            result.error = null;
+            result.data = message;           
+        }else{
+            result.error = "The led message is not valid"
         }
+        return result;
     };
 
     sendFirmwareUpdate(messageObj, command=null) {
-        if(messageUtils.isFirmwareUpdateMessageValid(messageObj)){            
+        var result = {};
+        if(messageUtils.isFirmwareUpdateMessageValid(messageObj)===true){            
             var topic = messageUtils.serverToProductFirmwareUpdateTopic(this.mac);
             var message = {
                 mac: this.mac,
                 topic: topic,
-                data: JSON.stringify(messageObj),
-                oldBroker: this.isProductUsingOldBroker()
-            }  
+                data: JSON.stringify(messageObj)               
+            }; 
             var sendInfo = {
                 message,
-                command,
-            }             
+                command
+            };             
             this.sendPublishMessageEvent(message);
             if(command!=null){
                 this.putFeedbackOnQueue(sendInfo);
             }
            // this.putFeedbackOnQueue(sendInfo);
             //mqttUtils.publishMqttMessage(topic,JSON.stringify(messageObj));
-            return message;            
+             
+            result.error = null;
+            result.data = message;           
+        }else{
+            result.error = "The update message is not valid."  
         }
+        return result;
+    };
+    //{"type":"pairStatic","id":"p2","data":{"ssid":"bruna","password":"assasasasas", "ip":"192.168.1.1","mask":"255.255.255.0","gw":"192.168.1.1" }}
+    sendPairStaticIp(messageObj, command=null) {
+        var result = {};
+        if(messageUtils.isPairStaticIpMessageValid(messageObj)===true){            
+            var topic = messageUtils.serverToProductPairStaticIpTopic(this.mac);
+            var message = {
+                mac: this.mac,
+                topic: topic,
+                data: JSON.stringify(messageObj)               
+            }; 
+            var sendInfo = {
+                message,
+                command
+            };             
+            this.sendPublishMessageEvent(message);
+            if(command!=null){
+                this.putFeedbackOnQueue(sendInfo);
+            }
+           // this.putFeedbackOnQueue(sendInfo);
+            //mqttUtils.publishMqttMessage(topic,JSON.stringify(messageObj));
+            result.error = null;
+            result.data = message;           
+        }else{
+            result.error = "The pair static IP message is not valid."
+        }
+        return result;
     };
 
     
 
     requestLedStatus(command=null){        
+        var result = {};
         var topic = messageUtils.serverToProductRequestLedStatusTopic(this.mac);            
         
         var message = {
             mac: this.mac,
             topic: topic,
-            data:'', 
-            oldBroker: this.isProductUsingOldBroker()                      
-        }     
+            data:''                                  
+        };     
         var sendInfo = {
             message,
-            command,
-        }    
+            command
+        };    
         this.sendPublishMessageEvent(message); 
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
         //this.putFeedbackOnQueue(sendInfo);
-        return message;         
+        result.error = null;
+        result.data = message;
+        return result;         
     }
 
-    requestFirmwareInfo(command=null){        
+    
+
+    requestFirmwareInfo(command=null){  
+        var result = {};      
         var topic = messageUtils.serverToProductRequestFirmwareInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
-            data:'',
-            oldBroker: this.isProductUsingOldBroker()             
+            data:''                        
         }
         var sendInfo = {
             message,
-            command,
-        }  
+            command
+        };  
         this.sendPublishMessageEvent(message);
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
-        return message;        
+        result.error = null;
+        result.data = message;
+        return result;        
     }
 
-    requestStatusInfo(command=null){    
+    requestStatusInfo(command=null){ 
+        var result = {};   
         var topic = messageUtils.serverToProductRequestStatusInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
-            data:'',
-            oldBroker: this.isProductUsingOldBroker()                
-        }
+            data:''
+                            
+        };
         var sendInfo = {
             message,
-            command,
-        }  
+            command
+        };  
        
         this.sendPublishMessageEvent(message);
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
-        return message;         
+        result.error = null;
+        result.data = message;
+        return result;         
     }
 
-    requestNetworkInfo(command=null){        
+    requestNetworkInfo(command=null){
+        var result = {};        
         var topic = messageUtils.serverToProductRequestNetworkInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
-            data:'',
-            oldBroker: this.isProductUsingOldBroker()               
-        } 
+            data:''                         
+        };
         var sendInfo = {
             message,
-            command,
-        }  
+            command
+        };  
         this.sendPublishMessageEvent(message);
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
-        return message;        
+        result.error = null;
+        result.data = message;
+        return result;        
     }
 
-    requestGlobalInfo(command=null){        
+    requestGlobalInfo(command=null){  
+        var result = {};      
         var topic = messageUtils.serverToProductRequestGlobalInfoTopic(this.mac);
         var message = {
             mac: this.mac,
             topic: topic,
-            data:'',
-            oldBroker: this.isProductUsingOldBroker()               
-        }   
+            data:''                          
+        };
         var sendInfo = {
             message,
-            command,
-        }       
+            command
+        };       
         this.sendPublishMessageEvent(message); 
         if(command!=null){
             this.putFeedbackOnQueue(sendInfo);
         }
-        return message;        
+        result.error = null;
+        result.data = message;
+        return result;        
     }
 
-     command(command){
+    updateFirmware(command = null){
+        var firmware; 
+        var result = {};
+        if((command===null)||(!!command.data===false)){
+            var firmwares = new Firmwares();
+            firmware = firmwares.getLastFirmware();
+        }else{
+            firmware = firmwares.getFirmware(command.data);
+        }        
+        if(firmware.error === null){
+            var firmwareCopy = Object.assign({}, firmware.result);
+            delete firmwareCopy.version;
+            var localResult = this.sendFirmwareUpdate(firmwareCopy, command);
+            if (localResult.error === null) {
+                result.error = null;
+                result.data = localResult.data;                
+            } else {
+                console.log(`Message not sent.`);
+                result.error = `Could not send the update command: ${localResult.error}`;
+            }
+        }else{
+            result.error = `Could not get the Firmware to update: ${firmware.error}`; 
+        }
+        return result;
+    }
+    
+    command(command){
+        var result = {};
         if(command.type){
             switch(command.type){
               case 'reqLed':              
-                var result = this.requestLedStatus(command);
-                if (result) {
+                var localResult = this.requestLedStatus(command);
+                if (localResult.error === null) {
                    // emitFeedback('Product not found', null, command);
-                   return result;
+                   result.error = null;
+                   result.data = localResult.data;                   
                 } else {
-                console.log(`Message was not sent.`);
-                
+                    console.log(`Message was not sent.`);
+                    result.error = `Could not Resquest Led Status: ${localResult.error}`;                   
                 }
-                      
+                //return result;
               break;
               case 'comLed':                   
-                  var result = this.sendLedCommandObj(command.data, command);
-                  if (result) {
-                    return result;
+                  var localResult = this.sendLedCommandObj(command.data, command);
+                  if (localResult.error === null) {
+                     result.error = null;
+                     result.data = localResult.data;                   
                   } else {
                     console.log(`Message not sent.`);
-                   // emitFeedback('Product not found', null, command);
+                    result.error = `Could not send Led command: ${localResult.error}`;
                   }
-                
+                  //return result;
                 
                 
               break;
               case 'reqFirmware':               
-                  var result = this.requestFirmwareInfo(command);
-                  if (result) {
-                    console.log(`Message was sent:`);
-                    return result;
+                  var localResult = this.requestFirmwareInfo(command);
+                  if (localResult.error === null) {
+                    result.error = null;
+                    result.data = localResult.data;                    
                   } else {
                     console.log(`Message not sent.`);
-                    //emitFeedback('Product not found', null, command);
+                    result.error = `Could not request Firmware Info: ${localResult.error}`;
                   }
+                  //return result;
                 
               break;
               case 'reqNetwork':                         
-                  var result = this.requestNetworkInfo(command);
-                if (result) {
-                  console.log(`Message was sent:`);
-                  return result;
+                  var localResult = this.requestNetworkInfo(command);
+                if (localResult.error === null) {
+                    result.error = null;
+                    result.data = localResult.data;                  
                 } else {
                   console.log(`Message not sent.`);
-                  //emitFeedback('Product not found', null, command);
+                  result.error = `Could not request Network Info: ${localResult.error}`;
                 }
-              
+                //return result;
               break;
               case 'reqStatus':
-                  var result = this.requestStatusInfo(command);
-                if (result) {
-                  console.log(`Message was sent:`);
-                  return result;
+                  var localResult = this.requestStatusInfo(command);
+                if (localResult.error === null) {
+                    result.error = null;
+                    result.data = localResult.data;                  
                 } else {
                   console.log(`Message not sent.`);
-                  //emitFeedback('Product not found', null, command);
+                  result.error = `Could not request Status Info: ${localResult.error}`;
                 }
-               
+                //return result;
               break;
               case 'reqGlobal':
-                  var result = this.requestGlobalInfo(command);
-                if (result) {
-                  console.log(`Message was sent:`);
-                  return result;
-                } else {
-                  console.log(`Message not sent.`);
-                  //emitFeedback('Product not found.', null, command);
-                }
-              
+                    var localResult = this.requestGlobalInfo(command);
+                    if (localResult.error === null) {
+                        result.error = null;
+                        result.data = localResult.data;                  
+                    } else {
+                        console.log(`Message not sent.`);
+                        result.error = `Could not request Global Info: ${localResult.error}`;
+                    }
+                    //return result;
+              break;
+               case 'pairStatic':
+                    var localResult = this.sendPairStaticIp(command.data, command);
+                    if (localResult.error === null) {
+                        result.error = null;
+                        result.data = localResult.data;                  
+                    } else {
+                        console.log(`Message not sent.`);
+                        result.error = `Could not send pair Static IP message: ${localResult.error}`;
+                    }
+                     //return result;              
               break;
               case 'update':
-                var firmwares = new Firmwares();
-                var lastFirmware = firmwares.getLastFirmware();
-                if(lastFirmware.error === null){
-                    var firmwareCopy = Object.assign({}, lastFirmware);
-                    delete firmwareCopy.version;
-                    var result = this.sendFirmwareUpdate(firmwareCopy, command);
-                    if (result) {
-                        console.log(`Message was sent:`);
-                        return result;
-                      } else {
-                        console.log(`Message not sent.`);
-                        //emitFeedback('Product not found', null, command);
-                      }
-                }
-               
-
-
-
-                
-
-                  /* var result = this.requestGlobalInfo(command);
-                if (result) {
-                  console.log(`Message was sent:`);
-                  return result;
+                var localResult = this.updateFirmware(command);
+                if (localResult.error === null) {
+                    result.error = null;
+                    result.data = localResult.data;                  
                 } else {
-                  console.log(`Message not sent.`);
-                  //emitFeedback('Product not found.', null, command);
-                } */
-              
+                    console.log(`Message not sent.`);
+                    result.error = `Could not update the firmware: ${localResult.error}`;
+                }                
+                //return result;
               break;
               default:
                 //emitFeedback('Command unknown.', null, command);
                 console.log(`Trying to send Unknown Message:`);
+                result.error = "command.type is unknown."
                     
             }
-          }
+        }else{
+            result.error = 'The command.type was not defined.'
+        }
+        return result;
     }
      
 }

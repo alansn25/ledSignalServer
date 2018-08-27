@@ -1,22 +1,69 @@
+<!DOCTYPE html>
+
 <html>
 
 <head>
     <meta charset= "utf-8">
-    <title>LedSignal | Test</title>
+    <title>Chat | ChatApp</title>
     <meta name = "viewport" content="width=device-width, initial-scale=1, user-scalable=no"> 
-    
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 
-<body>  
+<body class="chat">
     
-    <h1> LedSig Test</h1>
-    <p>Instruções: Usar a função requestInfo e a sendCommand através do Chrome Dev Tools passando os parametros necessários</p>
+    <div class="chat__sidebar">
+        <h3>Pareamento</h3>
+        <div id="form">           
+                <input name="mac_field"  type="text"  placeholder="Digite o MAC" autofocus autocomplete="off"/>           
+                <input name="ssid_field"  type="text"  placeholder="Digite o SSID" autofocus autocomplete="off"/>
+                <input name="password_field"  type="text"  placeholder="Digite o password" autofocus autocomplete="off"/>
+                <input name="ip_field"  type="text"  placeholder="Digite o IP fixo" autofocus autocomplete="off"/>
+                <input name="mask_field"  type="text"  placeholder="Digite a máscara" autofocus autocomplete="off"/>
+                <input name="gateway_field"  type="text"  placeholder="Digite o gateway" autofocus autocomplete="off"/>
+        </div>            
+        <button  id="check-button" type="submit">Checar</button>
+        <button  id="update-button" type="submit">Update</button>
+        <button  id="pair-button" type="submit">Parear</button>
+            
+       
+    </div>
+    
+    <div class="chat__main">
+        <ol id="messages" class= "chat__messages"></ol>
+              
+    </div>    
+
+    <script id="message-template" type="text/template">
+        <li class="message">
+            <div class="message__title">
+                <h4>{{from}}</h4>
+               
+            </div>                
+            <div class="message__body">
+                <p>{{text}}</p>
+            </div>
+        </li>
+    </script>
+
+    <script id="location-message-template" type="text/template">
+        <li class="message">
+            <div class="message__title">
+                <h4>{{from}}</h4>
+                <span>{{createdAt}}</span>
+            </div>                
+            <div class="message__body">
+                <p>
+                    <a href="{{url}}" target="_blank">My current location</a>
+                </p>
+            </div>
+        </li>
+    </script>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/libs/jquery-3.3.1.min.js"></script>
-    <script src="/js/htmlserver.js"></script>
-    
-    
+    <script src="/js/libs/moment.js"></script>
+    <script src="/js/libs/mustache.js"></script>    
+    <script src="/js/pairing.js"></script>
 </body>
 
 

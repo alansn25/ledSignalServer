@@ -40,7 +40,7 @@ class MqttUtils {
                 //console.log(`catch error message:${objData}`);
             }
             console.log(` `);
-            console.log(`Received MQTT message :`);  
+            console.log(`Received MQTT message V2 :`);  
             messageUtils.printMessage(topic,objData);                  
             
             var topicMac = messageUtils.getMacFromTopic(topic);
@@ -57,29 +57,9 @@ class MqttUtils {
             eventEmitter.emit(message.mac,message);
                        
         }); 
-        /* eventEmitter.on('PublishMessage', (message) => {
-            console.log(`Publishing Message :`);
-            messageUtils.printMessage(message.topic, message.data);
-            
 
-            
-            if(message.retain==true){
-                if(message.oldBroker === true){
-                    this.mqttClientV1.publish(message.topic, message.data,{ qos: 2, retain: true } );
-                }else{
-                    this.mqttClientV2.publish(message.topic, message.data,{ qos: 2, retain: true } );
-                }
-                
-            }else{
-                if(message.oldBroker === true){
-                    this.mqttClientV1.publish(message.topic, message.data, { qos: 2 } );
-                }else{
-                    this.mqttClientV2.publish(message.topic, message.data, { qos: 2 } );
-                }                
-            }            
-        }); */
         eventEmitter.on('PublishMessage2', (message) => {
-            console.log(`Publishing Message :`);
+            console.log(`Publishing Message V2:`);
             messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
@@ -90,7 +70,7 @@ class MqttUtils {
         });
 
 
-
+ 
         this.mqttClientV1 = mqtt.connect('mqtt://broker.hivemq.com');
         this.mqttClientV1.on('connect', () => {
             this.mqttClientV1.subscribe(messageUtils.receiveAllTopic ());
@@ -108,7 +88,7 @@ class MqttUtils {
                 //console.log(`catch error message:${objData}`);
             }
             console.log(` `);
-            console.log(`Received MQTT message :`);  
+            console.log(`Received MQTT message V1 :`);  
             messageUtils.printMessage(topic,objData);                  
             
             var topicMac = messageUtils.getMacFromTopic(topic);
@@ -127,7 +107,7 @@ class MqttUtils {
         });
         
         eventEmitter.on('PublishMessage1', (message) => {
-            console.log(`Publishing Message :`);
+            console.log(`Publishing Message V1:`);
             messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
@@ -135,7 +115,7 @@ class MqttUtils {
             }else{
                 this.mqttClientV1.publish(message.topic, message.data, { qos: 2 } );
             }            
-        }); 
+        });  
     } 
 }
 

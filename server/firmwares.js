@@ -21,14 +21,9 @@ const firmwareSchema = Joi.object().keys({
 
 class Firmwares {
     constructor(){        
-        this.firmwares= [];        
-        this.readFirmwaresFromFile((err)=>{                   
-            if(err){
-                console.log(`Error reading from file: ${err}`);
-            }else{
-                console.log(`Read from file successful.`);
-            }
-        });            
+               
+        this.firmwares = JSON.parse(fs.readFileSync(fileName));
+        
     };
 
     writeFirmwaresToFile (callback) {

@@ -19,6 +19,13 @@ const firmwareUpdateMessageSchema = Joi.object().keys({
     revision: Joi.number().integer().required()
 });
 
+const pairStaticIpMessageSchema = Joi.object().keys({
+    ssid: Joi.string().required(),
+    password: Joi.string().required(),
+    ip: Joi.string().required(),
+    mask: Joi.string().required(),
+    gw: Joi.string().required()    
+});
 
 
 var topicPrefix;
@@ -83,6 +90,16 @@ class MessageUtils {
             return true;
         }else{           
             console.log(`${JSON.stringify(message)} is not a valid Firmware Update Message.Error:${JSON.stringify(result.error.details)}`);
+            return false
+        }        
+    }
+
+    isPairStaticIpMessageValid (message) {        
+        var result = Joi.validate(message, pairStaticIpMessageSchema);
+        if(result.error===null){
+            return true;
+        }else{           
+            console.log(`${JSON.stringify(message)} is not a valid pair Static IP Message.Error:${JSON.stringify(result.error.details)}`);
             return false
         }        
     }
@@ -168,8 +185,13 @@ class MessageUtils {
     };
 
     productToServerFirmwareUpdateReplyTopic (macAddress) {
-        return `${topicPrefix}${macAddress}/lsig/update/start`;
+        return `${topicPrefix}${macAddress}/lsig/cmd/update/start`;
     };
+
+    serverToProductPairStaticIpTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/cmd/network`;
+    };
+    
 
     getMacFromTopic(topic) {
         var splittedTopic = topic.split('/');

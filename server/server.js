@@ -126,8 +126,8 @@ io.on('connection', (socket) => {
     var product = products.getProduct(command.id);
     if(product){
       var result = product.command(command);
-      if(!result){
-        emitCommandFeedback('could not handle the command', command, null);
+      if(result.error != null){
+        emitCommandFeedback(result.error, command, null);
       }
     }else{
       emitCommandFeedback('Product not found', command, null);
