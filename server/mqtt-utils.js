@@ -12,7 +12,8 @@ var messageUtils =new MessageUtils();
 class MqttUtils {
     constructor(){
         //this.products = products;
-        /* var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
+         //var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
+         var CAfile = [process.env.CA_CERT];
          var options = {
             host: 'homolog.araujoapp.com.br',
             port: 7710,
@@ -20,7 +21,7 @@ class MqttUtils {
             ca: CAfile,   
             clientId: 'Application_2507',            
             username: process.env.MQTT_USERNAME,
-            password:process.env.MQTT_PASSWORD,                        
+            password:process.env.MQTT_PASSWORD                        
         }; 
 
         this.mqttClientV2 = mqtt.connect(options);
@@ -67,7 +68,7 @@ class MqttUtils {
             }else{
                 this.mqttClientV2.publish(message.topic, message.data, { qos: 2 } );
             }            
-        }); */
+        }); 
 
 
  
