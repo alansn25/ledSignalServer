@@ -76,7 +76,7 @@ class MqttUtils {
 
 
  
-         /*this.mqttClientV1 = mqtt.connect('mqtt://broker.hivemq.com');
+         this.mqttClientV1 = mqtt.connect('mqtt://broker.hivemq.com');
         this.mqttClientV1.on('connect', () => {
             this.mqttClientV1.subscribe(messageUtils.receiveAllTopic ());
             this.mqttClientV1.subscribe(messageUtils.receiveActiveTopic ());                       
@@ -120,7 +120,7 @@ class MqttUtils {
             }else{
                 this.mqttClientV1.publish(message.topic, message.data, { qos: 2 } );
             }            
-        }); */
+        }); 
     }  
 }
 
