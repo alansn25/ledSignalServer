@@ -13,7 +13,7 @@ const ledMessageSchema = Joi.object().keys({
 const firmwareUpdateMessageSchema = Joi.object().keys({
     server: Joi.string().required(),
     port: Joi.number().integer().positive().required(),
-    path: Joi.string().required(),
+    path: Joi.string(),
     major: Joi.number().integer().required(),
     minor: Joi.number().integer().required(),
     revision: Joi.number().integer().required()
@@ -84,7 +84,8 @@ class MessageUtils {
         }
     }
 
-    isFirmwareUpdateMessageValid (message) {        
+    isFirmwareUpdateMessageValid (message) {  
+        
         var result= Joi.validate(message, firmwareUpdateMessageSchema);
         if(result.error===null){
             return true;

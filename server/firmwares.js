@@ -15,7 +15,7 @@ if(process.env.NODE_ENV==='test'){
 const firmwareSchema = Joi.object().keys({
     server: Joi.string().required(),
     port: Joi.number().integer().required(),
-    path: Joi.string().required(),   
+    path: Joi.string(),   
     version: Joi.string().regex(/^(?:\d{1,3}\.){2}\d{1,3}$/)
 });
 
