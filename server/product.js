@@ -598,10 +598,10 @@ class Product {
     updateFirmware(command = null){
         var firmware; 
         var result = {};
-        if((command===null)||(!!command.data===false)){
-            var firmwares = new Firmwares();
+        var firmwares = new Firmwares();
+        if((command===null)||(!!command.data===false)){            
             firmware = firmwares.getLastFirmware();
-        }else{
+        }else if(process.env.PORT){
             firmware = firmwares.getFirmware(command.data);
         }        
         if(firmware.error === null){

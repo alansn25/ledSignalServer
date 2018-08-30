@@ -20,7 +20,8 @@ class MqttUtils {
             port: 7710,
             protocol: 'mqtts',           
            // ca: CAfile,   
-            clientId: 'App_Servidor_Framework',            
+           clientId: 'App_Servidor_Framework', 
+            //clientId: 'App_Teste',            
             username: process.env.MQTT_USERNAME,
             password:process.env.MQTT_PASSWORD, 
             rejectUnauthorized: false                      
