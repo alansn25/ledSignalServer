@@ -35,7 +35,7 @@ var products = new Products();
   if(err){
       console.log(`Error reading from file: ${err}`);
   }else{
-      console.log(`Read from file successful.`);
+      console.log(`Read from file successfully.`);
   }
 }); */ 
 var mqttUtils = new MqttUtils();

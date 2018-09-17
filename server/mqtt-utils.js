@@ -12,26 +12,88 @@ var messageUtils =new MessageUtils();
 class MqttUtils {
     constructor(){
         //this.products = products;
-         //var CAfile = [fs.readFileSync(__dirname +'/../server/ca.crt')];
+         var CAfileV3 = [fs.readFileSync(__dirname +'/../server/ca.crt')];
          
          //var CAfile = [process.env.CA_CERT];
-         var options = {
-            host: 'homolog.araujoapp.com.br',
+         var optionsV3 = {
+            host: 'araujoapp.com.br',
             port: 7710,
             protocol: 'mqtts',           
-           // ca: CAfile,   
-           clientId: 'App_Servidor_Framework', 
-            //clientId: 'App_Teste',            
+            //ca: CAfileV3,   
+            //clientId: 'Local_test', 
+            clientId: 'Araujo_Prod_Server',            
             username: process.env.MQTT_USERNAME,
             password:process.env.MQTT_PASSWORD, 
             rejectUnauthorized: false                      
         }; 
 
-        this.mqttClientV2 = mqtt.connect(options);
+        this.mqttClientV3 = mqtt.connect(optionsV3);
+        this.mqttClientV3.on('connect', () => {
+            this.mqttClientV3.subscribe(messageUtils.receiveAllTopic ());
+            this.mqttClientV3.subscribe(messageUtils.receiveActiveTopic ());  
+            console.log("Broker V3: Conectou aqui!!");
+
+        });
+
+        this.mqttClientV3.on('message', (topic, data) => {
+            var stringData=data.toString().replace(/\0/g, "");//removes null character           
+            var objData;
+            try {
+                objData = JSON.parse(stringData);
+                //console.log(`converted message:${objData}`);
+            } catch (e) {
+                objData = stringData;
+                //console.log(`catch error message:${objData}`);
+            }
+            console.log(` `);
+            console.log(`Received MQTT message V2 :`);  
+            messageUtils.printMessage(topic,objData);                  
+            
+            var topicMac = messageUtils.getMacFromTopic(topic);
+            if(eventEmitter.listenerCount(topicMac)==0){
+                eventEmitter.emit('newProductMessage',topicMac);                
+            }            
+            var message={
+                mac:topicMac,
+                topic: topic,
+                data:objData, 
+                timestamp: moment().format('HH:mm:SSS'),
+                brokerVersion:3
+            }
+            eventEmitter.emit(message.mac,message);
+                       
+        }); 
+
+        eventEmitter.on('PublishMessage3', (message) => {
+            console.log(`Publishing Message V3:`);
+            messageUtils.printMessage(message.topic, message.data);            
+             
+            if(message.retain==true){
+                this.mqttClientV3.publish(message.topic, message.data,{ qos: 2, retain: true } );
+            }else{
+                this.mqttClientV3.publish(message.topic, message.data, { qos: 2 } );
+            }            
+        });
+
+
+        var CAfileV2 = [fs.readFileSync(__dirname +'/../server/ca.crt')];
+          var optionsV2 = {
+            host: 'homolog.araujoapp.com.br',
+            port: 7710,
+            protocol: 'mqtts',           
+            //ca: CAfileV2,   
+            //clientId: 'Local_test', 
+            clientId: 'Araujo_Prod_Server',            
+            username: process.env.MQTT_USERNAME,
+            password:process.env.MQTT_PASSWORD, 
+            rejectUnauthorized: false                      
+        }; 
+
+        this.mqttClientV2 = mqtt.connect(optionsV2);
         this.mqttClientV2.on('connect', () => {
             this.mqttClientV2.subscribe(messageUtils.receiveAllTopic ());
             this.mqttClientV2.subscribe(messageUtils.receiveActiveTopic ());  
-            console.log("Conectou aqui!!");
+            console.log("Broker V2: Conectou aqui!!");
 
         });
 
@@ -121,7 +183,7 @@ class MqttUtils {
             }else{
                 this.mqttClientV1.publish(message.topic, message.data, { qos: 2 } );
             }            
-        }); 
+        });  
     }  
 }
 

@@ -190,9 +190,11 @@ class MessageUtils {
     };
 
     serverToProductPairStaticIpTopic (macAddress) {
+        return `${topicPrefix}${macAddress}/app/cmd/network`;
+    };
+    productToServerPairStaticIpReplyTopic (macAddress) {
         return `${topicPrefix}${macAddress}/lsig/cmd/network`;
     };
-    
 
     getMacFromTopic(topic) {
         var splittedTopic = topic.split('/');

@@ -8,9 +8,9 @@ const {Firmwares} = require('./firmwares');
 
 var fileName;
 if(process.env.NODE_ENV==='test'){
-    fileName = 'products-data.test.json';//better to create a file to test and another to run
+    fileName = __dirname + '/../products-data.test.json';//better to create a file to test and another to run
 }else{
-    fileName = 'products-data.json';//better to create a file to test and another to run
+    fileName =__dirname + '/../products-data.json';//better to create a file to test and another to run
 }
 
 
@@ -34,7 +34,7 @@ class Products {
             if(err){
                 console.log(`Error reading from file: ${err}`);
             }else{
-                console.log(`Read from file successful.`);
+                console.log(`Read from file successfully.`);
             }
         }); 
 
@@ -70,7 +70,7 @@ class Products {
                 if(err){
                     console.log(`Error writing to file: ${err}`);
                 }else{
-                    console.log(`Wrote to file successful.`);
+                    console.log(`Wrote to file successfully.`);
                 }
             });
         })
@@ -225,7 +225,7 @@ class Products {
                     if(err){
                         console.log(`Error writing to file: ${err}`);
                     }else{
-                        console.log(`Wrote to file successful. `);
+                        console.log(`Wrote to file successfully. `);
                     }
                 });
                 return product;
@@ -252,7 +252,7 @@ class Products {
             if(err){
                 console.log(`Error writing to file: ${err}`);
             }else{
-                console.log(`Wrote to file successful. `);
+                console.log(`Wrote to file successfully. `);
             }
         });
         }
@@ -267,7 +267,7 @@ class Products {
             if(err){
                 console.log(`Error writing to file: ${err}`);
             }else{
-                console.log(`Wrote to file successful. `);
+                console.log(`Wrote to file successfully. `);
             }
         });
         }

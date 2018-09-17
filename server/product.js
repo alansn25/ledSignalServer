@@ -111,14 +111,33 @@ class Product {
             switch(message.topic){
                 case messageUtils.productToServerActiveTopic(this.mac):                    
                    
-                this.setActive(message.data);
-                   if(this.isActive()===true){
+                    this.setActive(message.data);
+
+                    if(this.isActive(message.data)===true){
+                        this.setActive(message.data);
                         if(message.hasOwnProperty('brokerVersion')===true){
                             //this.setBrokerVersion(message.brokerVersion);
                             this.brokerVersion = message.brokerVersion;
                         }
                        this.requestGlobalInfo();
-                   }
+                    }else if(this.isActive(message.data)===false){
+                        if(message.hasOwnProperty('brokerVersion')===true){
+                           if(this.hasOwnProperty('brokerVersion')===true){
+                                if(this.brokerVersion == message.brokerVersion){
+                                    this.setActive(message.data);
+                                }
+                           }else{
+                                this.setActive(message.data);
+                           }
+                        }
+                    }
+                    if(this.isActive()===true){
+                        if(message.hasOwnProperty('brokerVersion')===true){
+                            //this.setBrokerVersion(message.brokerVersion);
+                            this.brokerVersion = message.brokerVersion;
+                        }
+                       this.requestGlobalInfo();
+                    }
                     
                 break;
                 case messageUtils.productToServerCommandFeedbackTopic(this.mac):                    
@@ -170,13 +189,13 @@ class Product {
                     console.log(`Firmware Update Reply Message: `);    
                     isUpdateMessage = true;               
                 break;
-                case messageUtils.serverToProductPairStaticIpTopic(this.mac):
+                case messageUtils.productToServerPairStaticIpReplyTopic(this.mac):
                     console.log(`Firmware Update Reply Message: `);    
                     this.setNetwork(message.data);               
                 break;
                 
                 default:
-                    error=`Unknowm Message:`;  
+                    error=`Unknown Message:`;  
             }
 
             if(feedback){
@@ -267,12 +286,19 @@ class Product {
         }
     };
     
-    isActive(){                
-        if(this.active==='on'){
+    isActive(data=null){                
+        var parameterToCheck;
+        if(data===null){
+            parameterToCheck=this.active;
+        }else{
+            parameterToCheck=data;
+        }             
+        if( parameterToCheck==='on'){
             return true;
-        }else if(this.active==='off'){
+        }else if( parameterToCheck==='off'){
             return false;
-        }        
+        }  
+           
     };
     isFirmwareDifferent(major, minor, revision){
         if(this.firmware){

@@ -4,9 +4,9 @@ const _ = require ('lodash');
 
 var fileName;
 if(process.env.NODE_ENV==='test'){
-    fileName = 'firmwares-data.test.json';//better to create a file to test and another to run
+    fileName = __dirname + '/../firmwares-data.test.json';//better to create a file to test and another to run
 }else{
-    fileName = 'firmwares-data.json';//better to create a file to test and another to run
+    fileName = __dirname + '/../firmwares-data.json';//better to create a file to test and another to run
 }
 //^(?:\d{1,3}\.){2}\d{1,3}$
 
@@ -67,7 +67,10 @@ class Firmwares {
 
     getLastFirmware(){
         var result={}; 
-        if(this.firmwares.length===0){
+        if(this.firmwares===undefined){
+            result.error='The firmwares file was not found.';
+        }
+        else if(this.firmwares.length===0){
             result.error='There is no firmware';
         }else{        
             var lastVersion = this.firmwares.reduce((accumulator, currentValue)=>{
@@ -122,7 +125,7 @@ class Firmwares {
                         if(err){
                             console.log(`Error writing firmwares to file: ${err}`);
                         }else{
-                            console.log(`Wrote firmwares to file successful. `);
+                            console.log(`Wrote firmwares to file successfully. `);
                         }
                     });
                 }else{
@@ -153,7 +156,7 @@ class Firmwares {
                     if(err){
                         console.log(`Error writing firmwares to file: ${err}`);
                     }else{
-                        console.log(`Wrote firmwares to file successful. `);
+                        console.log(`Wrote firmwares to file successfully. `);
                     }
                 });
             }else{
@@ -178,7 +181,7 @@ class Firmwares {
                 if(err){
                     console.log(`Error writing firmwares to file: ${err}`);
                 }else{
-                    console.log(`Wrote firmwares to file successful. `);
+                    console.log(`Wrote firmwares to file successfully. `);
                 }
             });
         }else{

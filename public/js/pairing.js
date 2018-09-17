@@ -20,6 +20,41 @@ function appendMessage(mac,event,text){
     scrollToBottom();
 }
 
+var clearButton = jQuery('#clear-button');
+clearButton.on('click', function (e) {
+    console.log("The clear button was clicked."); 
+    currentMac=jQuery('[name=mac_field]').val();   
+    console.log(`The current mac is ${currentMac}`); 
+    jQuery('#messages').empty();
+});
+var onButton = jQuery('#on-button');
+onButton.on('click', function (e) {
+    console.log("The on button was clicked."); 
+    currentMac=jQuery('[name=mac_field]').val();   
+    console.log(`The current mac is ${currentMac}`); 
+    sendCommand({
+        type:"comLed",
+        id:currentMac,
+        data:{
+            led1:"on",
+            led2:"on"
+        }
+    });
+});
+var offButton = jQuery('#off-button');
+offButton.on('click', function (e) {
+    console.log("The off button was clicked."); 
+    currentMac=jQuery('[name=mac_field]').val();   
+    console.log(`The current mac is ${currentMac}`); 
+    sendCommand({
+        type:"comLed",
+        id:currentMac,
+        data:{
+            led1:"off",
+            led2:"off"
+        }
+    });
+});
 
 var checkButton = jQuery('#check-button');
 checkButton.on('click', function (e) {
