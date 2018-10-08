@@ -6,6 +6,8 @@ const {MessageUtils} = require('./message-utils');
 const eventEmitter = require('./event-emitter');
 const Joi = require('joi');
 const {Firmwares} = require('./firmwares');
+const {Logging}=  require('./logging');
+const path = require('path');
 
 const feedbackTimeOut = 5000;
 const ledSchema = Joi.object().keys({    
@@ -17,6 +19,7 @@ const ledSchemaOld = Joi.object().keys({
     green: Joi.string().required().valid('on','off')
 });
 const messageUtils =new MessageUtils();
+const logs = new Logging();
 //const mqttUtils = new MqttUtils();
 
 class Product {
@@ -34,15 +37,19 @@ class Product {
     }
     emitWriteFileEvent(){
         eventEmitter.emit('writeFile');
+        logs.logEmmitEvent('product','writeFile', null);
     }
     emitConnetEvent(product){
         eventEmitter.emit('connect', product);
+        logs.logEmmitEvent('product','connect', product);
     }
     emitDisconnetEvent(product){
         eventEmitter.emit('disconnect', product);
+        logs.logEmmitEvent('product','disconnect', product);
     }
     emitFeedbackEvent(error, sendInfo, response){
         eventEmitter.emit('commandFeedback', error, sendInfo, response);
+        logs.logInternalEmmitCommandFeedbackEvent(error,sendInfo,response);
     }
     /* emitMessageFailureEvent(error, message){
         eventEmitter.emit('MessageFailure', error, message);
@@ -102,7 +109,7 @@ class Product {
     }
     startReceiving(){
         eventEmitter.on(this.mac, (message) => {
-        
+            logs.logReceiveEvent('product',this.mac, message);
             var feedback = this.removeFeedabackFromQueue(message);
             var error=null;
             var isUpdateMessage = false;
@@ -111,7 +118,7 @@ class Product {
             switch(message.topic){
                 case messageUtils.productToServerActiveTopic(this.mac):                    
                    
-                    this.setActive(message.data);
+                    //this.setActive(message.data);
 
                     if(this.isActive(message.data)===true){
                         this.setActive(message.data);
@@ -131,13 +138,13 @@ class Product {
                            }
                         }
                     }
-                    if(this.isActive()===true){
+                    /* if(this.isActive()===true){
                         if(message.hasOwnProperty('brokerVersion')===true){
                             //this.setBrokerVersion(message.brokerVersion);
                             this.brokerVersion = message.brokerVersion;
                         }
                        this.requestGlobalInfo();
-                    }
+                    } */
                     
                 break;
                 case messageUtils.productToServerCommandFeedbackTopic(this.mac):                    
@@ -338,8 +345,10 @@ class Product {
     sendPublishMessageEvent(message){
         if(this.hasOwnProperty('brokerVersion')===true){
             eventEmitter.emit(`PublishMessage${this.brokerVersion}`, message);
+            logs.logEmmitEvent('product',`PublishMessage${this.brokerVersion}`, message);
         }else{
             eventEmitter.emit('PublishMessage1', message);
+            logs.logEmmitEvent('product','PublishMessage1', message);
         }
     }
 
@@ -648,6 +657,7 @@ class Product {
     }
     
     command(command){
+        logs.logProductReceivedCommand(command);
         var result = {};
         if(command.type){
             switch(command.type){

@@ -1,1 +1,56 @@
-[{"server":"192.168.1.100","port":80,"path":"ledupdate","version":"1.2.3","major":1,"minor":2,"revision":3},{"server":"192.168.2.101","port":3000,"path":"leduadsasaspdate","version":"5.0.0","major":5,"minor":0,"revision":0},{"server":"192.168.10.120","port":4500,"path":"thisIsMypath","version":"2.1.0","major":2,"minor":1,"revision":0},{"server":"192.168.2.101","port":3600,"path":"fdtregg","version":"7.1.8","major":7,"minor":1,"revision":0},{"server":"192.168.2.101","port":3600,"path":"fdtregg","version":"7.2.0","major":7,"minor":1,"revision":0},{"server":"192.168.2.101","port":3600,"path":"fdtregg","version":"7.2.1","major":7,"minor":1,"revision":0}]
+[
+    {
+      "server": "192.168.1.100",
+      "port": 80,
+      "path": "ledupdate",
+      "version": "1.2.3",
+      "major": 1,
+      "minor": 2,
+      "revision": 3
+    },
+    {
+      "server": "192.168.2.101",
+      "port": 3000,
+      "path": "leduadsasaspdate",
+      "version": "5.0.0",
+      "major": 5,
+      "minor": 0,
+      "revision": 0
+    },
+    {
+      "server": "192.168.10.120",
+      "port": 4500,
+      "path": "thisIsMypath",
+      "version": "2.1.0",
+      "major": 2,
+      "minor": 1,
+      "revision": 0
+    },
+    {
+      "server": "192.168.2.101",
+      "port": 3600,
+      "path": "fdtregg",
+      "version": "7.1.8",
+      "major": 7,
+      "minor": 1,
+      "revision": 0
+    },
+    {
+      "server": "192.168.2.101",
+      "port": 3600,
+      "path": "fdtregg",
+      "version": "7.2.0",
+      "major": 7,
+      "minor": 1,
+      "revision": 0
+    },
+    {
+      "server": "192.168.2.101",
+      "port": 3600,
+      "path": "fdtregg",
+      "version": "7.2.1",
+      "major": 7,
+      "minor": 1,
+      "revision": 0
+    }
+  ]

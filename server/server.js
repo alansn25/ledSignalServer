@@ -11,7 +11,8 @@ const {MessageUtils} = require('./message-utils');
 const socketIOAuth = require('socketio-auth');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
-var config = require('./../config/config.js'); 
+var config = require(path.normalize('./../config/config.js')); 
+const {Logging} =  require('./logging');
 
 const publicPath = path.join(__dirname, '../public')
 
@@ -20,11 +21,13 @@ const port = process.env.PORT || 3000;
 
 
 
+var logs = new Logging();
+logs.logApplicationStart();
 
 
+logs.logMessageInfo(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
 
-
-console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
+//console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
@@ -48,35 +51,43 @@ process.stdin.setEncoding('utf8');
 
 
 eventEmitter.on('command', (command)=>{
+  logs.logReceiveEvent('server','command',command);
   command.timestamp = moment().format('HH:mm:SSS');
     var product = products.getProduct(command.id);
     if(product){
       product.command(command);
     }else{
-      emitCommandFeedback('Product not found', command, null);
+      emitCommandFeedback('Product not found', command, null);      
     }
 });
 
  
 
 eventEmitter.on('newProduct', (product)=>{
+  logs.logReceiveEvent('server','newProduct', product);
   io.sockets.emit('newProduct', product);
+  logs.logEmmitSocketEvent('newProduct', product);
 });
 
 eventEmitter.on('disconnect', (product)=>{
-  console.log('The product was disconnected');
+  logs.logReceiveEvent('server','disconnect', product);
+  //console.log('The product was disconnected');
   io.sockets.emit('productDisconnected', product);
+  logs.logEmmitSocketEvent('productDisconnected', product);
 });
 
 eventEmitter.on('connect', (product)=>{
-  console.log('The product was connected.');
+  logs.logReceiveEvent('server','connect', product);
+  //console.log('The product was connected.');
   io.sockets.emit('productConnected', product);
+  logs.logEmmitSocketEvent('productConnected', product);
 });
 
 
 
 eventEmitter.on('commandFeedback', (error, sendInfo, product)=>{
-  console.log('Enter on commandFeedback');
+  logs.logInternalReceiveCommandFeedbackEvent(error,sendInfo,product);
+  //console.log('Enter on commandFeedback');
   if(sendInfo){
     emitCommandFeedback(error, sendInfo.command, product);
   }else{
@@ -85,6 +96,7 @@ eventEmitter.on('commandFeedback', (error, sendInfo, product)=>{
 });
 
 eventEmitter.on('infoRequestFeedback', (error, infoRequest, feedback)=>{
+  logs.logInternalReceiveRequestInfoFeedbackEvent(error,sendInfo,product);
   console.log('Enter on info');  
     emitInfoFeedback(error, infoRequest, feedback);     
 });
@@ -100,7 +112,8 @@ eventEmitter.on('infoRequestFeedback', (error, infoRequest, feedback)=>{
 
 
 io.on('connection', (socket) => {
-  console.log('New listener is up');
+  //console.log('New listener is up');
+  logs.logMessageInfo('A new listener is up on the socket connection.')
   
   /* socket.emit('subscribed', {
     topic: `${topicPrefix}/#`
@@ -122,6 +135,7 @@ io.on('connection', (socket) => {
   }); */
 
    socket.on('command', (command) => {
+    logs.logReceiveSocketEvent('command',command);
     command.timestamp = moment().format('HH:mm:SSS');
     var product = products.getProduct(command.id);
     if(product){
@@ -135,6 +149,7 @@ io.on('connection', (socket) => {
   });
  
   socket.on('infoRequest', (info) => {
+    logs.logReceiveSocketEvent('infoRequest',info);
     info.timestamp = moment().format('HH:mm:SSS');
    products.requestInfo(info);    
   }); 
@@ -207,9 +222,11 @@ socketIOAuth(io, { authenticate, postAuthenticate, disconnect, timeout:1000 });
 */
 function emitCommandFeedback(error, command, response){
   io.sockets.emit('commandFeedback', error, command, response);
+  logs.logSocketEmitCommandFeedback(error, command, response);
 };
 function emitInfoFeedback(error, infoRequest, response){
   io.sockets.emit('infoRequestFeedback', error, infoRequest, response);
+  logs.logSocketEmitInfoFeedback(error, infoRequest, response);
 };
 
 function checkCredentials(username, password, callback){
@@ -238,6 +255,7 @@ function checkCredentials(username, password, callback){
 }
 
 server.listen(port, ()=>{
-  console.log(`Server is up on the port ${port}`);
+  //console.log(`Server is up on the port ${port}`);
+  logs.logMessageInfo(`Server is up on the port ${port}`);
 });
 

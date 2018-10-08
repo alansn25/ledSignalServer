@@ -5,6 +5,9 @@ const {Product} = require('./product');
 //const {Products} = require('./products');
 var moment = require('moment');
 var fs = require('fs');
+const {Logging} =  require('./logging');
+var logs = new Logging();
+
 
 
 var messageUtils =new MessageUtils();
@@ -20,9 +23,9 @@ class MqttUtils {
             port: 7710,
             protocol: 'mqtts',           
             //ca: CAfileV3,   
-            //clientId: 'Local_test', 
-            clientId: 'Araujo_Prod_Server',            
-            username: process.env.MQTT_USERNAME,
+            clientId: 'Local_test', 
+            //clientId: 'Araujo_Prod_Server',            
+            username: process.env.MQTT_USERNAME,            
             password:process.env.MQTT_PASSWORD, 
             rejectUnauthorized: false                      
         }; 
@@ -31,7 +34,8 @@ class MqttUtils {
         this.mqttClientV3.on('connect', () => {
             this.mqttClientV3.subscribe(messageUtils.receiveAllTopic ());
             this.mqttClientV3.subscribe(messageUtils.receiveActiveTopic ());  
-            console.log("Broker V3: Conectou aqui!!");
+            //console.log("Broker V3: Conectou aqui!!");
+            logs.logMessageInfo('Conectou no Broker V3.');
 
         });
 
@@ -45,13 +49,17 @@ class MqttUtils {
                 objData = stringData;
                 //console.log(`catch error message:${objData}`);
             }
-            console.log(` `);
-            console.log(`Received MQTT message V2 :`);  
-            messageUtils.printMessage(topic,objData);                  
+            logs.logReceiveMqttMessage('V3',messageUtils.getMacFromTopic(topic),topic,objData);
+            //logReceiveMqttMessage(brokerVersion,mac,topic,message){
+            //console.log(` `);
+            //console.log(`Received MQTT message V3 :`);  
+            //messageUtils.printMessage(topic,objData);  
+            
             
             var topicMac = messageUtils.getMacFromTopic(topic);
             if(eventEmitter.listenerCount(topicMac)==0){
-                eventEmitter.emit('newProductMessage',topicMac);                
+                eventEmitter.emit('newProductMessage',topicMac); 
+                logs.logEmmitEvent('mqtt-utils','newProductMessage',topicMac);               
             }            
             var message={
                 mac:topicMac,
@@ -61,17 +69,21 @@ class MqttUtils {
                 brokerVersion:3
             }
             eventEmitter.emit(message.mac,message);
-                       
+            logs.logEmmitEvent('mqtt-utils',message.mac,message);           
         }); 
 
         eventEmitter.on('PublishMessage3', (message) => {
-            console.log(`Publishing Message V3:`);
-            messageUtils.printMessage(message.topic, message.data);            
+            logs.logReceiveEvent('mqtt-utils','PublishMessage3',message);
+            //console.log(`Publishing Message V3:`);
+            
+            //messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
                 this.mqttClientV3.publish(message.topic, message.data,{ qos: 2, retain: true } );
+                logs.logPublishMqttMessage('V3',message.topic,message.data,true);
             }else{
                 this.mqttClientV3.publish(message.topic, message.data, { qos: 2 } );
+                logs.logPublishMqttMessage('V3',message.topic,message.data,false);
             }            
         });
 
@@ -81,19 +93,20 @@ class MqttUtils {
             host: 'homolog.araujoapp.com.br',
             port: 7710,
             protocol: 'mqtts',           
-            //ca: CAfileV2,   
-            //clientId: 'Local_test', 
-            clientId: 'Araujo_Prod_Server',            
+            ca: CAfileV2,   
+            clientId: 'Local_test', 
+            //clientId: 'Araujo_Prod_Server',            
             username: process.env.MQTT_USERNAME,
-            password:process.env.MQTT_PASSWORD, 
-            rejectUnauthorized: false                      
+            password:process.env.MQTT_PASSWORD,             
+            rejectUnauthorized: true                      
         }; 
 
         this.mqttClientV2 = mqtt.connect(optionsV2);
         this.mqttClientV2.on('connect', () => {
             this.mqttClientV2.subscribe(messageUtils.receiveAllTopic ());
             this.mqttClientV2.subscribe(messageUtils.receiveActiveTopic ());  
-            console.log("Broker V2: Conectou aqui!!");
+            //console.log("Broker V2: Conectou aqui!!");
+            logs.logMessageInfo('Conectou no Broker V2.');
 
         });
 
@@ -107,13 +120,15 @@ class MqttUtils {
                 objData = stringData;
                 //console.log(`catch error message:${objData}`);
             }
-            console.log(` `);
-            console.log(`Received MQTT message V2 :`);  
-            messageUtils.printMessage(topic,objData);                  
+            logs.logReceiveMqttMessage('V2',messageUtils.getMacFromTopic(topic),topic,objData);
+            //console.log(` `);
+            //console.log(`Received MQTT message V2 :`);  
+            //messageUtils.printMessage(topic,objData);                  
             
             var topicMac = messageUtils.getMacFromTopic(topic);
             if(eventEmitter.listenerCount(topicMac)==0){
-                eventEmitter.emit('newProductMessage',topicMac);                
+                eventEmitter.emit('newProductMessage',topicMac);   
+                logs.logEmmitEvent('mqtt-utils','newProductMessage',topicMac);             
             }            
             var message={
                 mac:topicMac,
@@ -123,17 +138,21 @@ class MqttUtils {
                 brokerVersion:2
             }
             eventEmitter.emit(message.mac,message);
+            logs.logEmmitEvent('mqtt-utils',message.mac,message);
                        
         }); 
 
         eventEmitter.on('PublishMessage2', (message) => {
-            console.log(`Publishing Message V2:`);
-            messageUtils.printMessage(message.topic, message.data);            
+            logs.logReceiveEvent('mqtt-utils','PublishMessage2',message);
+            //console.log(`Publishing Message V2:`);
+            //messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
                 this.mqttClientV2.publish(message.topic, message.data,{ qos: 2, retain: true } );
+                logs.logPublishMqttMessage('V2',message.topic,message.data,true);
             }else{
                 this.mqttClientV2.publish(message.topic, message.data, { qos: 2 } );
+                logs.logPublishMqttMessage('V2',message.topic,message.data,false);
             }            
         }); 
 
@@ -142,7 +161,8 @@ class MqttUtils {
          this.mqttClientV1 = mqtt.connect('mqtt://broker.hivemq.com');
         this.mqttClientV1.on('connect', () => {
             this.mqttClientV1.subscribe(messageUtils.receiveAllTopic ());
-            this.mqttClientV1.subscribe(messageUtils.receiveActiveTopic ());                       
+            this.mqttClientV1.subscribe(messageUtils.receiveActiveTopic ());  
+            logs.logMessageInfo('Conectou no Broker V1.');                     
         });
 
         this.mqttClientV1.on('message', (topic, data) => {
@@ -155,13 +175,15 @@ class MqttUtils {
                 objData = stringData;
                 //console.log(`catch error message:${objData}`);
             }
-            console.log(` `);
-            console.log(`Received MQTT message V1 :`);  
-            messageUtils.printMessage(topic,objData);                  
+            logs.logReceiveMqttMessage('V1',messageUtils.getMacFromTopic(topic),topic,objData);
+            //console.log(` `);
+            //console.log(`Received MQTT message V1 :`);  
+            //messageUtils.printMessage(topic,objData);                  
             
             var topicMac = messageUtils.getMacFromTopic(topic);
             if(eventEmitter.listenerCount(topicMac)==0){
-                eventEmitter.emit('newProductMessage',topicMac);                
+                eventEmitter.emit('newProductMessage',topicMac);  
+                logs.logEmmitEvent('mqtt-utils','newProductMessage',topicMac);              
             }            
             var message={
                 mac:topicMac,
@@ -171,17 +193,21 @@ class MqttUtils {
                 brokerVersion:1
             }
             eventEmitter.emit(message.mac,message);
+            logs.logEmmitEvent('mqtt-utils',message.mac,message);
                        
         });
         
         eventEmitter.on('PublishMessage1', (message) => {
-            console.log(`Publishing Message V1:`);
-            messageUtils.printMessage(message.topic, message.data);            
+            logs.logReceiveEvent('mqtt-utils','PublishMessage1',message);
+            //console.log(`Publishing Message V1:`);
+            //messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
                 this.mqttClientV1.publish(message.topic, message.data,{ qos: 2, retain: true } );
+                logs.logPublishMqttMessage('V1',message.topic,message.data,true);
             }else{
                 this.mqttClientV1.publish(message.topic, message.data, { qos: 2 } );
+                logs.logPublishMqttMessage('V1',message.topic,message.data,false);
             }            
         });  
     }  

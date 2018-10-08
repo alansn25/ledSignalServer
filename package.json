@@ -19,7 +19,8 @@
     "mqtt": "^2.18.1",
     "socket.io": "^2.1.1",
     "socketio-auth": "^0.1.1",
-    "validate": "^4.4.1"
+    "validate": "^4.4.1",
+    "winston": "^3.1.0"
   },
   "devDependencies": {
     "expect": "^23.4.0",

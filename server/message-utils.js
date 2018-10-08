@@ -110,8 +110,10 @@ class MessageUtils {
         console.log(`MAC: ${this.getMacFromTopic(topic)}`);
         console.log(`Topic: ${topic}`);
         //console.log(`Message: ${message}`);
-        console.log(`Message: ${JSON.stringify(message)}`);        
+        console.log(`Message: ${JSON.stringify(message)}`);       
+        
    };
+   
 
     getTopicSufix(topic){
         var topicArray=topic.split('/');

@@ -1,19 +1,25 @@
+//const {Logging}=  require('./logging');
+
+//const logs = new Logging();
+
 var socket = io();
 var currentMac = null;
 
 function sendCommand (command) {    
     socket.emit('command',command);
+    //logs.logSendSocketCommand(command);
 }
 
 function requestInfo (info) {
     socket.emit('infoRequest',info);
+    //logs.logSendSocketInforequest(info);    
 }
 
 function appendMessage(mac,event,text){
     var template = jQuery('#message-template').html();
     var html = Mustache.render(template, {
         text: text,
-        from: `${ moment().format('HH:mm:SSS')} MAC: ${mac} - ${event}:`        
+        from: `${ moment().format('HH:mm:ss:SSS')} MAC: ${mac} - ${event}:`        
     });
 
     jQuery('#messages').append(html);

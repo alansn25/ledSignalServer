@@ -5,14 +5,16 @@ const events = require('events');
 const {Product} = require('./product');
 const eventEmitter = require('./event-emitter');
 const {Firmwares} = require('./firmwares');
+const {Logging} =  require('./logging');
+const path = require('path');
 
 var fileName;
 if(process.env.NODE_ENV==='test'){
-    fileName = __dirname + '/../products-data.test.json';//better to create a file to test and another to run
+    fileName =  path.join(__dirname,'/../products-data.test.json');//better to create a file to test and another to run
 }else{
-    fileName =__dirname + '/../products-data.json';//better to create a file to test and another to run
+    fileName = path.join(__dirname,'/../products-data.json');//better to create a file to test and another to run
 }
-
+var logs = new Logging();
 
 /* const ledSchema = Joi.object().keys({    
     yellow: Joi.string().required().valid('on','off'),
@@ -50,9 +52,11 @@ class Products {
 
     listenToNewProductMessage(){
         eventEmitter.on('newProductMessage', (mac) => {
+            logs.logReceiveEvent('products','newProductMessage', mac);
             var product = this.addProduct(mac); 
             if(product){
                 eventEmitter.emit("newProduct", product);
+                logs.logEmmitEvent('products',"newProduct", product);
             }
                 
         });
@@ -60,12 +64,14 @@ class Products {
     }
     listenToInfoRequest(){
         eventEmitter.on('infoRequest', (info) => {
+            logs.logReceiveEvent('products','infoRequest', info);
             this.requestInfo(info);
         });
 
     }
      listenToWriteFile() {
         eventEmitter.on('writeFile', () => {
+            logs.logReceiveEvent('products','writeFile', null);
             this.writeProductsToFile((err)=>{                   
                 if(err){
                     console.log(`Error writing to file: ${err}`);
@@ -77,6 +83,7 @@ class Products {
     }; 
     emitInfoFeedbackEvent(error, infoRequest, feedback){
         eventEmitter.emit('infoRequestFeedback',error, infoRequest, feedback);
+        logs.logInternalEmmitInfoRequestFeedbackEvent(error, infoRequest, feedback);
     }
     getFilename(){
         return fileName;
