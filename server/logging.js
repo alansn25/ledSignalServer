@@ -48,7 +48,7 @@ const logger = createLogger({
             level: 'debug',
             handleExceptions: true,
             humanReadableUnhandledException: true,
-            maxsize: 5242880, //5MB
+            maxsize: 10485760, //10MB
             maxFiles: 10,
             format: format.combine(
                 //format.colorize(), 
