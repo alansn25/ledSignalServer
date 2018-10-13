@@ -59,7 +59,7 @@ class Product {
         //var timerId = {};
         
         var timerId = setTimeout(() => {           
-            this.removeFeedabackFromQueue(sendInfo.message);  
+            this.removeFeedbackFromQueue(sendInfo.message);  
             this.emitFeedbackEvent('Time Out', sendInfo, this );             
         }, feedbackTimeOut, sendInfo);
         //var timerId = setTimeout(this.executeTimeOut.bind(this,sendInfo),feedbackTimeOut);
@@ -79,20 +79,20 @@ class Product {
         } */
     }
    /*  executeTimeOut(sendInfo){
-        this.removeFeedabackFromQueue(sendInfo.message);  
+        this.removeFeedbackFromQueue(sendInfo.message);  
         this.emitFeedbackEvent('Time Out', sendInfo, this );
     } */
-    removeFeedabackFromQueue(message){         
+    removeFeedbackFromQueue(message){         
+        var returnValue = null;
         if(this.feedbackQueue.length>0){
             var topicSufix = messageUtils.getTopicSufix(message.topic);
             var feedback = _.remove(this.feedbackQueue, (element)=>element.id == topicSufix);       
-            //if(feedback.length>1){
-            if(feedback[0]){                    
+            if(feedback[0]){  
                 clearTimeout(feedback[0].timerId);                                                
-                return feedback[0];
-            }
-            //}
-        }                   
+                returnValue = feedback[0];
+            }            
+        }   
+        return  returnValue;               
     }
 
     printFeedbackQueue(){
@@ -110,7 +110,7 @@ class Product {
     startReceiving(){
         eventEmitter.on(this.mac, (message) => {
             logs.logReceiveEvent('product',this.mac, message);
-            var feedback = this.removeFeedabackFromQueue(message);
+            var feedback = this.removeFeedbackFromQueue(message);
             var error=null;
             var isUpdateMessage = false;
             
@@ -126,7 +126,7 @@ class Product {
                             //this.setBrokerVersion(message.brokerVersion);
                             this.brokerVersion = message.brokerVersion;
                         }
-                       this.requestGlobalInfo();
+                       //this.requestGlobalInfo();
                     }else if(this.isActive(message.data)===false){
                         if(message.hasOwnProperty('brokerVersion')===true){
                            if(this.hasOwnProperty('brokerVersion')===true){
@@ -272,13 +272,14 @@ class Product {
         return this;         
     };
 
-    setActive(active){       
-        var result = Joi.validate(active, Joi.string().valid('on','off').required());             
-        if(result.error===null){         
+    setActive(localActive){ 
+        var result = {};      
+        var validation = Joi.validate(localActive, Joi.string().valid('on','off').required());             
+        if(validation.error===null){         
             if(this.hasOwnProperty('active')){
                 var currentActive = this.active;
-                if(currentActive!=active){
-                    this.active=active; 
+                if(currentActive!=localActive){
+                    this.active=localActive; 
                     if(this.isActive()===true){  
                         this.emitConnetEvent(this);
                         //this.requestGlobalInfo();
@@ -287,10 +288,14 @@ class Product {
                     } 
                 }                  
             }else{
-                this.active=active;                
+                this.active=localActive;                
             }       
-            return this;           
+            result.error=null;    
+                   
+        }else{
+            result.error=validation.error;
         }
+        return result;
     };
     
     isActive(data=null){                
@@ -336,7 +341,8 @@ class Product {
                 return true;
             }
         }else{
-            this.requestGlobalInfo();
+            return true;
+            //this.requestGlobalInfo();
         }
     }
 

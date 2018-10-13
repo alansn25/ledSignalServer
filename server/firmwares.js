@@ -3,6 +3,7 @@ const fs = require('fs');
 const _ = require ('lodash');
 
 var fileName;
+//Error Linux Nomes do Arquivo
 if(process.env.NODE_ENV==='test'){
     fileName = __dirname + '/../firmwares-data.test.json';//better to create a file to test and another to run
 }else{

@@ -130,8 +130,8 @@ class Logging {
         logger.info(message);
     }    
     
-    logReceiveSocketEvent(eventType, data){
-        var message = `Receiving Socket Event-> Type:${eventType}|Data:${JSON.stringify(data)}`;
+    logReceiveSocketEvent(eventType, data, ip){
+        var message = `Receiving Socket Event-> IP:${ip} Type:${eventType}|Data:${JSON.stringify(data)}`;
         logger.info(message);
     }
     logEmmitSocketEvent(eventType, data){

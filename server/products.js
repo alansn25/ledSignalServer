@@ -34,9 +34,11 @@ class Products {
 
          this.readProductsFromFile((err)=>{                   
             if(err){
-                console.log(`Error reading from file: ${err}`);
+                //console.log(`Error reading from file: ${err}`);
+                logs.logMessageInfo(`Error reading from file: ${err}`);
             }else{
-                console.log(`Read from file successfully.`);
+                //console.log(`Read from file successfully.`);
+                logs.logMessageInfo(`Read from file successfully`);
             }
         }); 
 
@@ -74,9 +76,11 @@ class Products {
             logs.logReceiveEvent('products','writeFile', null);
             this.writeProductsToFile((err)=>{                   
                 if(err){
-                    console.log(`Error writing to file: ${err}`);
+                    //console.log(`Error writing to file: ${err}`);
+                    logs.logMessageInfo(`Error writing to file: ${err}`);
                 }else{
-                    console.log(`Wrote to file successfully.`);
+                    //console.log(`Wrote to file successfully.`);
+                    logs.logMessageInfo(`Wrote to file successfully.`);
                 }
             });
         })

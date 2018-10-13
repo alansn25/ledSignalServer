@@ -113,7 +113,11 @@ eventEmitter.on('infoRequestFeedback', (error, infoRequest, feedback)=>{
 
 io.on('connection', (socket) => {
   //console.log('New listener is up');
-  logs.logMessageInfo('A new listener is up on the socket connection.')
+  //var ip = socket.handshake.headers["x-real-ip"];
+  var clientIp = socket.conn.remoteAddress;
+  //var clientIp = socket.request.connection.remoteAddress;
+  logs.logMessageInfo(`A new listener is up on the socket connection. IP:${clientIp}`);
+  
   
   /* socket.emit('subscribed', {
     topic: `${topicPrefix}/#`
@@ -135,7 +139,8 @@ io.on('connection', (socket) => {
   }); */
 
    socket.on('command', (command) => {
-    logs.logReceiveSocketEvent('command',command);
+    var clientIp = socket.conn.remoteAddress;
+    logs.logReceiveSocketEvent('command',command, clientIp);
     command.timestamp = moment().format('HH:mm:SSS');
     var product = products.getProduct(command.id);
     if(product){
@@ -149,7 +154,8 @@ io.on('connection', (socket) => {
   });
  
   socket.on('infoRequest', (info) => {
-    logs.logReceiveSocketEvent('infoRequest',info);
+    var clientIp = socket.conn.remoteAddress;;
+    logs.logReceiveSocketEvent('infoRequest',info, clientIp);
     info.timestamp = moment().format('HH:mm:SSS');
    products.requestInfo(info);    
   }); 
