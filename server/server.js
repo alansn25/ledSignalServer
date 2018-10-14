@@ -14,7 +14,7 @@ const bcrypt = require('bcryptjs');
 var config = require(path.normalize('./../config/config.js')); 
 const {Logging} =  require('./logging');
 
-const publicPath = path.join(__dirname, '../public')
+const publicPath = path.join('../public')
 
 const port = process.env.PORT || 3000;
 

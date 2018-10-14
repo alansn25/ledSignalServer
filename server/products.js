@@ -10,9 +10,9 @@ const path = require('path');
 
 var fileName;
 if(process.env.NODE_ENV==='test'){
-    fileName =  path.join(__dirname,'/../products-data.test.json');//better to create a file to test and another to run
+    fileName =  path.join('/../products-data.test.json');//better to create a file to test and another to run
 }else{
-    fileName = path.join(__dirname,'/../products-data.json');//better to create a file to test and another to run
+    fileName = path.join('/../products-data.json');//better to create a file to test and another to run
 }
 var logs = new Logging();
 
