@@ -15,7 +15,7 @@ var messageUtils =new MessageUtils();
 class MqttUtils {
     constructor(){
         //this.products = products;
-         var CAfileV3 = [fs.readFileSync('/../server/ca.crt')];
+         var CAfileV3 = [fs.readFileSync('server/ca.crt')];
          
          //var CAfile = [process.env.CA_CERT];
          var optionsV3 = {
@@ -88,7 +88,7 @@ class MqttUtils {
         });
 
 
-        var CAfileV2 = [fs.readFileSync('/../server/ca.crt')];
+        var CAfileV2 = [fs.readFileSync('server/ca.crt')];
           var optionsV2 = {
             host: 'homolog.araujoapp.com.br',
             port: 7710,
