@@ -15,7 +15,7 @@ var messageUtils =new MessageUtils();
 class MqttUtils {
     constructor(){
         //this.products = products;
-         var CAfileV3 = [fs.readFileSync('server/ca.crt')];
+         var CAfileV3 = [fs.readFileSync(__dirname +'/../server/ca.crt')];
          
          //var CAfile = [process.env.CA_CERT];
          var optionsV3 = {
@@ -23,8 +23,8 @@ class MqttUtils {
             port: 7710,
             protocol: 'mqtts',           
             //ca: CAfileV3,   
-            clientId: 'Local_test2', 
-            //clientId: 'Araujo_Prod_Server',            
+            //clientId: 'Local_test', 
+            clientId: 'Araujo_Prod_Server',            
             username: process.env.MQTT_USERNAME,            
             password:process.env.MQTT_PASSWORD, 
             rejectUnauthorized: false                      
@@ -79,8 +79,9 @@ class MqttUtils {
             //messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
-                this.mqttClientV3.publish(message.topic, message.data,{ qos: 2, retain: true } );
-                logs.logPublishMqttMessage('V3',message.topic,message.data,true);
+                this.mqttClientV3.publish(message.topic, message.data,{ qos: 2, retain: false } );
+ 
+	          logs.logPublishMqttMessage('V3',message.topic,message.data,false);
             }else{
                 this.mqttClientV3.publish(message.topic, message.data, { qos: 2 } );
                 logs.logPublishMqttMessage('V3',message.topic,message.data,false);
@@ -88,14 +89,14 @@ class MqttUtils {
         });
 
 
-        var CAfileV2 = [fs.readFileSync('server/ca.crt')];
+        var CAfileV2 = [fs.readFileSync(__dirname +'/../server/ca.crt')];
           var optionsV2 = {
             host: 'homolog.araujoapp.com.br',
             port: 7710,
             protocol: 'mqtts',           
             ca: CAfileV2,   
-            clientId: 'Local_test2', 
-            //clientId: 'Araujo_Prod_Server',            
+            //clientId: 'Local_test', 
+            clientId: 'Araujo_Prod_Server',            
             username: process.env.MQTT_USERNAME,
             password:process.env.MQTT_PASSWORD,             
             rejectUnauthorized: true                      
@@ -148,8 +149,8 @@ class MqttUtils {
             //messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
-                this.mqttClientV2.publish(message.topic, message.data,{ qos: 2, retain: true } );
-                logs.logPublishMqttMessage('V2',message.topic,message.data,true);
+                this.mqttClientV2.publish(message.topic, message.data,{ qos: 2, retain: false } );
+                logs.logPublishMqttMessage('V2',message.topic,message.data,false);
             }else{
                 this.mqttClientV2.publish(message.topic, message.data, { qos: 2 } );
                 logs.logPublishMqttMessage('V2',message.topic,message.data,false);
@@ -203,8 +204,8 @@ class MqttUtils {
             //messageUtils.printMessage(message.topic, message.data);            
              
             if(message.retain==true){
-                this.mqttClientV1.publish(message.topic, message.data,{ qos: 2, retain: true } );
-                logs.logPublishMqttMessage('V1',message.topic,message.data,true);
+                this.mqttClientV1.publish(message.topic, message.data,{ qos: 2, retain: false } );
+                logs.logPublishMqttMessage('V1',message.topic,message.data,false);
             }else{
                 this.mqttClientV1.publish(message.topic, message.data, { qos: 2 } );
                 logs.logPublishMqttMessage('V1',message.topic,message.data,false);

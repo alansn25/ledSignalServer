@@ -11,10 +11,10 @@ const {MessageUtils} = require('./message-utils');
 const socketIOAuth = require('socketio-auth');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
-var config = require(path.normalize('./../config/config.js')); 
+var config = require('../config/config.js'); 
 const {Logging} =  require('./logging');
 
-const publicPath = path.join('../public')
+const publicPath = path.join(__dirname, '../public')
 
 const port = process.env.PORT || 3000;
 

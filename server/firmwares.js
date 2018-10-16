@@ -3,13 +3,10 @@ const fs = require('fs');
 const _ = require ('lodash');
 
 var fileName;
-//Error Linux Nomes do Arquivo
 if(process.env.NODE_ENV==='test'){
-    //fileName = '/../firmwares-data.test.json';//better to create a file to test and another to run
-    fileName = 'firmwares-data.test.json'; 
+    fileName = __dirname + '/../firmwares-data.test.json';//better to create a file to test and another to run
 }else{
-    //fileName = '/../firmwares-data.json';//better to create a file to test and another to run
-    fileName = 'firmwares-data.json';
+    fileName =  'firmwares-data.json';//better to create a file to test and another to run
 }
 //^(?:\d{1,3}\.){2}\d{1,3}$
 
